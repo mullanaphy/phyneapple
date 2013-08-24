@@ -37,7 +37,7 @@
      * @license Public Domain
      * @author Solar Designer <solar at openwall.com>
      */
-    class PHPass
+    class PHPass implements \PHY\Encoder\IEncoder
     {
 
         protected $itoa64,

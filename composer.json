@@ -4,7 +4,7 @@
     "keywords": ["phy", "framework", "psr-3"],
     "homepage": "https://github.com/mullanaphy/phyneapple",
     "type": "framework",
-    "license": "Open Software License (\"OSL\") v. 3.0",
+    "license": "The Open Software License v3.0",
     "authors": [
         {
             "name": "John Mullanaphy",

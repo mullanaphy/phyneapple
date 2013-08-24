@@ -125,7 +125,7 @@ class Check extends \PHY\Controller\AController {
             $authorize->request = 'controller/admin';
             $authorize->allow = 'admin super-admin';
             $authorize->deny = 'all';
-            $authorize->save();
+            $app->get('database')->getManager()->save($authorize);
         }
         $authorize->setUser($user);
         if (!$authorize->isAllowed()) {

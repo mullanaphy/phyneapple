@@ -1,0 +1,246 @@
+PHY\Phyneapple - an experimental framework for PHP 5.4+
+================================================================================
+
+
+Phyneapple is a smaller framework I built for side projects to use as an
+alternative to [Symfony2](https://www.symfony2.org/). It doesn't compete with
+Symfony2 or any other framework for the most part since it doesn't even have
+simple routing patterns...
+
+Install
+-----
+
+To install, run this up. And then add all your code into src.
+
+```bash
+composer create-project phy/phyneapple
+```
+
+Routing
+-----
+
+To keep it basic, routing works by mapping /:controller/:method
+to a \PHY\Controller\{:controller}::{:method}_{:request_method}(). For example
+doing a POST /user/login would load \PHY\Controller\User and then attempt to
+call the method login_post(), if that doesn't exist it falls back to
+login_get(), then index_post(), and then finally index_get(). That's how routing
+works on face value.
+
+Controllers
+-----------
+
+Controllers and routes are rolled into one, on top of that, routers have access
+to the page's building blocks via \PHY\View\Layout, the page's request
+\PHY\Request, and returns a \PHY\Response.
+
+Views
+-----
+
+Views are influenced by Magento's blocks. However Magento uses XML and it's very
+clunky. Which is with a good reason since it's highly customizable and once your
+familiar with it, it's pretty sweet. Still, for smaller projects no XML and a
+simpler structure was needed. So views are broken into blocks and are put
+together using JSON config files.
+
+Everything starts in design/default/www/config/default.json
+which has a main "layout" class and all other blocks are children of "layout" or
+its descending children and so forth. Configs can then overwrite any block from
+design/default/www/config/default.json and there is some black magic to load
+these config files if they exist, using the same routing method, our previous
+/user/login will look for design/default/www/config/user/login.json and then
+design/default/www/config/user/login.json unless you overwrite the config inside
+of your action method.
+
+Now, as for blocks themselves, they're just .phtml files which has variables
+passed to them as basic variables. Also has access to $this, which correlates to
+\PHY\View\AView and whatever type of View is extending that.
+
+Quick example of how the .phtml file works.
+```php
+/*
+ * in \PHY\Controller\Index::index_get()
+ */
+$this->getLayout()->getBlock('message', [
+    'someVariable' => 'banana!'
+]);
+
+/*
+ * in design/default/www/block/
+ */
+I passed variable "someVariable": <?=$someVariable?>
+
+Here's a url builder: <a href="<?=$this->url('user/login')?>">Login</a>
+```
+
+Lastly about views. You can also have custom classes for your view blocks
+instead of using a generic \PHY\View\Block. These are configured in the JSON
+config files and the custom class just needs to implement \PHY\View\IBlock.
+
+Model
+-----
+
+Models are made to quickly create a new table and add content without having to
+manage everything on the database side. Model's themselves have their data
+structures as a static protected value, $source, which can be retrieved via
+Model::getSource(). With that, the DataMapper will read the $source and create a
+compatible mapping to any database that's setup. Personally I'm writing the
+MySQL and MongoDB connections but there's interfaces that can be used to write
+your own mapper and inject it in.
+
+AJAX Conscious
+--------------
+
+The framework itself is pretty conscious about AJAX requests. All models have a
+helpful toArray() for easily building paths to models as well as AJAX friendly
+responses for actions like Manager::{save, delete}(Model). For instance, on
+Manager::save(Model) you'll get back a $response array that's looks like one of
+these:
+
+- Successful insert: ['status' => 200, 'response' => $insert_id]
+- Successful update: ['status' => 204]
+- Failed: ['status' => 500, 'response' => 'Error message']
+- Failed Access Denied: ['status' => 403, 'response' => 'No permissions...']
+
+With the response, there is a helper to see if a response is a success or not,
+\PHY\Response::ok($response), which returns a true for 2xx status codes.
+
+Security
+--------
+PHY\Phyneapple uses a pretty basic ACL Model that can check to see if a user or
+their group is granted or denied access on any aspect of the site. Whether it's
+viewing a page or editing a specific Model they're easy to get into the page.
+Quick example
+
+```php
+namespace \PHY\Controller
+class Check extends \PHY\Controller\AController {
+    /**
+     * This matches GET /check
+     */
+    public function index_get() {
+        $app = $this->getApp();
+        $user = $app->getUser();
+        $authorize = $app->get('model/authorize')->loadByRequest('controller/check');
+        if (!$authorize->exists()) {
+            $authorize->request = 'controller/admin';
+            $authorize->allow = 'admin super-admin';
+            $authorize->deny = 'all';
+            $authorize->save();
+        }
+        $authorize->setUser($user);
+        if (!$authorize->isAllowed()) {
+            $this->redirect('edgage');
+        }
+    }
+}
+```
+Which would check to see if the logged in user has the group of 'admin' or
+'super-admin' and if they don't then they'll be redirected as it has a deny all.
+
+That example wasn't the greatest as there is already a check for
+'controller/:controller/:method/:request_method',
+'controller/:controller/:method', and 'controller/:controller' on page loads.
+Although if no requests are found then it won't do anything, while in the
+example it will create that authorize request for the immediate check and every
+check afterwards (good way to have default ACLs in place without having to
+manually write new ones anytime you want to flush the ACL table).
+
+The only other major areas of security to know is that Phyneapple does work to
+stop XSRF attacks and passwords are by default encrypted with bcrypt using
+PHPass.
+
+Registry Auto Magic
+-------------------
+
+MOSTLY GONE, REPLACED AS COMPONENTS. WHICH ARE STILL "MAGICAL"...
+
+Reading Configs
+---------------
+
+Configs also use $app->get('config/:configFile'); where :configFile
+matches a JSON file. You can also add config files into a nested folder
+structure that matches any extra '/' in the get string. Now there is a little
+more to that though, say you do:
+
+```php
+$config = $app->get('config/funny/jokes');
+```
+
+The Config component will first look for config/funny/jokes.json and return the
+JSON as an associated array. If it can't find that file it will then attempt to
+find config/funny.json and read into that file if it can. When it reads that
+file it will try and match to {"jokes":{}}. Otherwise you'll get an exception
+thrown.
+
+About
+-----
+
+The original inspiration for this was back when I worked for [Lafango](http://lafango.com/).
+While working there, things were starting to become super clunky as there were
+several developers and we were all rewriting the same basic underlying
+functionality. After awhile I got ticked off that our JS files were well over
+2MBs as well as every new page we made or page we had to maintain had zero
+consistency from file to file and even the front page HTML wasn't match.
+
+This was during the mid 2000s around the same time Symfony2 was coming out, yet
+with me being an idiot at the time, not being 100% familiar with frameworks, and
+not wanting to battle with everybody else over the whole not built in house
+mentality I had ended up spending a month or two writing the original version of
+this framework. I Picked PHY_ as the namespace (it was PHP 5.2 then, no actual
+namespaces yet) and at the time it did everything that was needed as creating
+pages become extremely fast and since we were all developers we were all able to
+use HTML elements via a Container class (not included in newer versions).
+
+That was good since it covered about 95% of our HTML and JavaScript needs
+(including turning any link/form to an AJAX call just by adding a class="ajax"
+to it and using data-* attributes to designate how the AJAX should act before
+and after making the response). So our global JS was now down to 100kb, page
+generations were fast, and our pages all started to look like they were a
+continual website. One other tidbit... That two month project also replaced a
+lot of legacy coding styles between then four of us and completely got rid of
+mysql_* and with the new models it took care of SQL injections when doing basic
+load/saves of models (someone could have still written SQL injectible code yet
+at that point I had been a watch dog just waiting...).
+
+Requirements
+------------
+
+- PHP 5.4+
+- PHY\Markup
+- PHY\Variable
+- [optional] PHY\Container
+
+Submitting bugs and feature requests
+------------------------------------
+
+Please send bugs to me via
+[GitHub](https://github.com/mullanaphy/phy/issues)
+
+Author
+------
+
+John Mullanaphy - <john@jo.mu> - <http://jo.mu/>
+That's it for now...
+
+License
+-------
+
+PHY\Phyneapple is licensed under the Open Software License (OSL 3.0) -
+see the `LICENSE` file for details
+
+Acknowledgements
+----------------
+
+Lafango and the crew there for giving me a place to develop my personal skills
+and build an earlier prototype of this project. While the current project only
+takes inspiration from the original and every thing was rewritten, certain
+things I try to keep close to it.
+
+TODO
+----
+
+- Currently working on the Controller/Layout/Request/Response interaction
+- Working on Models, in particular the DataMappers.
+- Integrate MongoDB
+- Tests, Tests, TESTS!
+- Remove as much global state as possible leaving just the core global.

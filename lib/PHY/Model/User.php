@@ -31,22 +31,24 @@
 
         protected $_password = '';
         protected static $_source = [
-            'primary' => [
-                'table' => 'user',
-                'columns' => [
-                    'username' => 'variable',
-                    'email' => 'variable',
-                    'password' => 'variable',
-                    'group' => 'variable',
-                    'activity' => 'date',
-                    'updated' => 'date',
-                    'created' => 'date',
-                    'deleted' => 'boolean'
-                ],
-                'keys' => [
-                    'local' => [
-                        'username' => 'unique',
-                        'email' => 'unique'
+            'schema' => [
+                'primary' => [
+                    'table' => 'user',
+                    'columns' => [
+                        'username' => 'variable',
+                        'email' => 'variable',
+                        'password' => 'variable',
+                        'group' => 'variable',
+                        'activity' => 'date',
+                        'updated' => 'date',
+                        'created' => 'date',
+                        'deleted' => 'boolean'
+                    ],
+                    'keys' => [
+                        'local' => [
+                            'username' => 'unique',
+                            'email' => 'unique'
+                        ]
                     ]
                 ]
             ]

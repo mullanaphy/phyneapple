@@ -30,11 +30,13 @@
     {
 
         protected static $_source = [
-            'primary' => [
-                'table' => 'testModel',
-                'columns' => [
-                    'name' => 'variable',
-                    'other' => 'variable'
+            'schema' => [
+                'primary' => [
+                    'table' => 'testModel',
+                    'columns' => [
+                        'name' => 'variable',
+                        'other' => 'variable'
+                    ]
                 ]
             ]
         ];

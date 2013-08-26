@@ -30,34 +30,35 @@
     {
 
         protected static $_source = [
-            'primary' => [
-                'table' => 'rewrite',
-                'columns' => [
-                    'request_method' => 'variable',
-                    'request_uri' => 'variable',
-                    'destination' => 'variable',
-                    'redirect' => 'boolean',
-                    'updated' => 'date',
-                    'created' => 'date',
-                    'deleted' => 'boolean'
-                ],
-                'id' => 'id'
+            'schema' => [
+                'primary' => [
+                    'table' => 'rewrite',
+                    'columns' => [
+                        'request_method' => 'variable',
+                        'request_uri' => 'variable',
+                        'destination' => 'variable',
+                        'redirect' => 'boolean',
+                        'updated' => 'date',
+                        'created' => 'date',
+                        'deleted' => 'boolean'
+                    ],
+                    'id' => 'id'
+                ]
             ]
         ];
 
         /**
          * Load a RewriteRule by its Request.
          *
-         * @param string $uri
-         * @param string $method
+         * @param \PHY\Request $request
          * @return \PHY\Model\Rewrite
          */
-        public function loadByRequest($uri, $method = 'GET')
+        public static function loadByRequest(\PHY\Request $request)
         {
-            return $this->load([
-                    'uri' => strtolower($uri),
-                    'method' => strtoupper($method)
-                ]);
+            return [
+                'uri' => $request->getUri(),
+                'method' => $request->getMethod()
+            ];
         }
 
     }

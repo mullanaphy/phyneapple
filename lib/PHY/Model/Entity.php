@@ -35,7 +35,7 @@
         protected $initial = [];
         protected $id;
         protected static $_source = [
-            'table' => [
+            'schema' => [
                 'primary' => [
                     'table' => 'item',
                     'columns' => [
@@ -113,12 +113,18 @@
         }
 
         /**
-         * 
+         * Initialize our model.
+         *
          * @param array $data
-         * @param array $initial
+         * @return \PHY\Model\Entity
          */
-        public function init(array $data = [], array $initial = [])
+        public function init(array $data = [])
         {
+            foreach ($this->getSource()['schema'] as $alias => $table) {
+                foreach ($table['columns'] as $key => $value) {
+                    $initial[$key] = '';
+                }
+            }
             foreach ($initial as $key => $value) {
                 if (array_key_exists($key, $data)) {
                     $initial[$key] = $data[$key];
@@ -126,6 +132,7 @@
             }
             $this->data = $initial;
             $this->initial = $initial;
+            return $this;
         }
 
         /**
@@ -222,8 +229,8 @@
         {
             if ($this->id === null) {
                 $source = $this->getSource();
-                $id = array_key_exists('id', $source['table']['primary'])
-                    ? $source['table']['primary']['id']
+                $id = array_key_exists('id', $source['schema']['primary'])
+                    ? $source['schema']['primary']['id']
                     : 'id';
                 $this->id = $id;
             }
@@ -282,3 +289,4 @@
         }
 
     }
+

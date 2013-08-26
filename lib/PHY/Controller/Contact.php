@@ -34,9 +34,8 @@
          */
         public function index_get()
         {
-            $this->getLayout()->addVariables('head', [
-                'title' => 'Contact'
-            ]);
+            $head = $this->getLayout()->block('head');
+            $head->setVariable('title', 'Contact');
         }
 
         /**
@@ -45,9 +44,8 @@
         public function index_post()
         {
             $layout = $this->getLayout();
-            $layout->addVariables('head', [
-                'title' => 'Contact'
-            ]);
+            $head = $layout->block('head');
+            $head->setVariable('title', 'Contact');
             try {
                 $fields = $this->getRequest()->get('email', []);
                 $mail = new \PHY\Model\Mail;
@@ -58,13 +56,15 @@
                 $success = true;
             } catch (\Exception $e) {
                 $success = false;
-                $layout->addChild('content', 'message', [
+                $content = $layout->block('content');
+                $content->addChild('message', [
                     'template' => 'generic/message/error.phtml',
                     'message' => $e->getMessage()
                 ]);
             }
             if ($success) {
-                $layout->addChild('content', 'message', [
+                $content = $layout->block('content');
+                $content->addChild('message', [
                     'template' => 'generic/message/success.phtml',
                     'message' => 'Thank you for your submission, I should get back to you within 24 hours.'
                 ]);

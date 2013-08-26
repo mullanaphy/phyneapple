@@ -101,14 +101,13 @@
 
             /* Check our ACL table to see if this user can view the action/method or not. */
             $check = trim(strtolower(str_replace([__NAMESPACE__, '\\'], ['', '/'], get_class($this))), '/');
-            $authorize = $app->get('model/authorize')->loadByRequest($check.'/'.$action);
-            $authorize->setUser($app->getUser());
-            if (!$authorize->isAllowed()) {
+            $manager = $app->get('database')->getManager();
+            $authorize = $manager->loadModel(['request' => $check.'/'.$action], 'authorize');
+            if (!$authorize->isAllowed($app->getUser())) {
                 $this->redirect('unauthorized');
             }
-            $authorize->loadByRequest($check);
-            $authorize->setUser($app->getUser());
-            if (!$authorize->isAllowed()) {
+            $authorize = $manager->loadModel(['request' => $check], 'authorize');
+            if (!$authorize->isAllowed($app->getUser())) {
                 $this->redirect('unauthorized');
             }
 
@@ -299,3 +298,4 @@
         }
 
     }
+

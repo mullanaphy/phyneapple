@@ -15,18 +15,18 @@
      *
      */
 
-    namespace PHY\Database\MySQLi\Query;
+    namespace PHY\Database\Mysqli\Query;
 
     /**
-     * Our MySQLi From object.
+     * Our Mysqli From object.
      *
-     * @package PHY\Database\MySQLi\Query\From
+     * @package PHY\Database\Mysqli\Query\From
      * @category PHY\Phyneapple
      * @copyright Copyright (c) 2013 Phyneapple! (http://www.phyneapple.com/)
      * @license http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
      * @author John Mullanaphy <john@jo.mu>
      */
-    class From extends \PHY\Database\MySQLi\Query\Element implements \PHY\Database\Query\IFrom
+    class From extends \PHY\Database\Mysqli\Query\Element implements \PHY\Database\Query\IFrom
     {
 
         protected $string = '';
@@ -73,7 +73,7 @@
         /**
          * {@inheritDoc}
          */
-        public function join($type = 'left', $table = '', $alias = false, $mapping = [])
+        public function join($type = 'left', $table = '', $alias = false, array $mapping = [])
         {
             $this->string = '';
             if (is_array($alias)) {
@@ -87,10 +87,10 @@
             }
             $alias = $rightAlias;
             if ($rightAlias) {
-                $rightAlias = '`'.$this->clean($rightAlias).'`';
+                $rightAlias = $this->clean($rightAlias, true);
             }
             if ($leftAlias) {
-                $leftAlias = '`'.$this->clean($leftAlias).'`';
+                $leftAlias = $this->clean($leftAlias, true);
             }
             $on = [];
             $mappings = array_slice(func_get_args(), 3);
@@ -99,7 +99,7 @@
                 foreach ($mapping as $key => $value) {
                     $ors[] = ($leftAlias
                             ? $leftAlias.'.'
-                            : '').$this->clean($key).' = '.($rightAlias
+                            : '').$this->clean($key, true).' = '.($rightAlias
                             ? $rightAlias.'.'
                             : '').$this->clean($value);
                 }
@@ -167,14 +167,18 @@
         public function toString()
         {
             if (!$this->string) {
-                $this->string = ' FROM ';
-                $tables = $this->table;
-                $primary = array_shift($tables);
-                $this->string .= '`'.$this->clean($primary['table']).'` '.$this->alias;
-                foreach (array_slice($tables, 1) as $alias => $table) {
-                    $this->string .= ' '.strtoupper($table['type']).' JOIN `'.$this->clean($table['table']).'`'.$alias.' ON ('.$table['on'].') ';
+                if ($this->table) {
+                    $this->string = ' FROM ';
+                    $tables = $this->table;
+                    $primary = array_shift($tables);
+                    $this->string .= $this->clean($primary['table'], true).' '.$this->clean($this->alias, true);
+                    foreach (array_slice($tables, 1) as $alias => $table) {
+                        $this->string .= ' '.strtoupper($table['type']).' JOIN '.$this->clean($table['table'], true).' '.$this->clean($alias, true).' ON ('.$table['on'].') ';
+                    }
+                    $this->string .= ' ';
+                } else {
+                    $this->string = ' ';
                 }
-                $this->string .= ' ';
             }
             return $this->string;
         }

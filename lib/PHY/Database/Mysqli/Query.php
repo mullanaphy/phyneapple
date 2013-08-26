@@ -15,34 +15,62 @@
      *
      */
 
-    namespace PHY\Database\MySQLi;
+    namespace PHY\Database\Mysqli;
 
     /**
      * Our main Query element. This is in essence our query builder.
      *
-     * @package PHY\Database\MySQLi\Query
+     * @package PHY\Database\Mysqli\Query
      * @category PHY\Phyneapple
      * @copyright Copyright (c) 2013 Phyneapple! (http://www.phyneapple.com/)
      * @license http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
      * @author John Mullanaphy <john@jo.mu>
      */
-    class Query extends \PHY\Database\MySQLi\Query\Element implements \PHY\Database\IQuery
+    class Query extends \PHY\Database\Mysqli\Query\Element implements \PHY\Database\IQuery
     {
 
-        protected $elements = [];
-        protected $results = null;
-        protected $manager = null;
-        protected $string = '';
+        private $elements = [];
+        private $results = null;
+        private $string = '';
 
         /**
          * {@inheritDoc}
          */
-        public function __construct(\PHY\Database\IManager $manager = null)
+        public function __construct(\PHY\Database\IManager $manager = null, \PHY\Model\Entity $model = null)
         {
             $this->elements = static::getElements();
             if ($manager !== null) {
                 $this->setManager($manager);
             }
+            if ($model !== null) {
+                $this->setModel($model);
+            }
+        }
+
+        /**
+         * Create a SELECT query based on a model.
+         * 
+         * @param \PHY\Model\Entity $model
+         * @return \PHY\Database\Mysqli\Query\
+         */
+        public function selectFromModel(\PHY\Model\Entity $model)
+        {
+            $this->setModel($model);
+            $from = $this->from;
+            $select = $this->select;
+            $source = $model->getSource();
+            foreach ($source['schema'] as $alias => $table) {
+                if ($alias === 'primary') {
+                    $from->from($table['table'], $alias);
+                } else {
+                    $from->leftJoin($table['table'], $alias, array_key_exists('mapping', $table)
+                            ? $table['mapping']
+                            : null);
+                }
+                $select->field('*', $alias);
+            }
+
+            return $this;
         }
 
         /**
@@ -111,11 +139,11 @@
         protected static function getElements()
         {
             return [
-                'from' => new \PHY\Database\MySQLi\Query\From,
-                'select' => new \PHY\Database\MySQLi\Query\Select,
-                'where' => new \PHY\Database\MySQLi\Query\Where,
-                'having' => new \PHY\Database\MySQLi\Query\Having,
-                'order' => new \PHY\Database\MySQLi\Query\Order
+                'select' => new \PHY\Database\Mysqli\Query\Select,
+                'from' => new \PHY\Database\Mysqli\Query\From,
+                'where' => new \PHY\Database\Mysqli\Query\Where,
+                'having' => new \PHY\Database\Mysqli\Query\Having,
+                'order' => new \PHY\Database\Mysqli\Query\Order
             ];
         }
 
@@ -125,7 +153,7 @@
         public function execute()
         {
             if ($this->results === null) {
-                $this->results = $this->getManager()->find($this);
+                $this->results = $this->getManager()->getDatabase()->query($this->toString());
             }
             return $this;
         }
@@ -142,21 +170,26 @@
         /**
          * {@inheritDoc}
          */
-        public function getManager()
+        public function setManager(\PHY\Database\IManager $manager)
         {
-            return $this->manager;
+            parent::setManager($manager);
+            foreach ($this->elements as $element) {
+                $element->setManager($manager);
+            }
+            return $this;
         }
 
         /**
          * {@inheritDoc}
          */
-        public function setManager(\PHY\Database\IManager $manager)
+        public function setModel(\PHY\Model\Entity $model)
         {
-            $this->manager = $manager;
+            parent::setModel($model);
             foreach ($this->elements as $element) {
-                $element->setManager($this->manager);
+                $element->setModel($model);
             }
             return $this;
         }
 
     }
+

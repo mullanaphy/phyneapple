@@ -46,12 +46,12 @@
         }
 
         /**
-         * Add config blocks to use with our layout.
+         * Load config blocks to use with our layout.
          *
          * @return \PHY\View\Layout
          * @throws \PHY\View\Layout\Exception
          */
-        public function addBlocks()
+        public function loadBlocks()
         {
             $configs = func_get_args();
             $app = $this->getController()->getApp();
@@ -66,7 +66,7 @@
                     }
                 }
                 if (!$file) {
-                    throw new Exception('Cannot load layout config '.$key);
+                    continue;
                 }
                 $FILE = fopen($file, 'r');
                 $content = fread($FILE, filesize($file));
@@ -74,9 +74,9 @@
                 $content = preg_replace(['#/\*.+?\*/#is'], '', $content);
                 $content = json_decode($content);
                 $content = (new \PHY\Variable\Obj($content))->toArray();
-                foreach ($content as $key => $value)
-                    ;
-                $this->buildBlocks($key, $value);
+                foreach ($content as $key => $value) {
+                    $this->buildBlocks($key, $value);
+                }
             }
             return $this;
         }
@@ -178,3 +178,4 @@
         }
 
     }
+

@@ -15,12 +15,12 @@
      *
      */
 
-    namespace PHY\Database\MySQLi\Query;
+    namespace PHY\Database\Mysqli\Query;
 
     /**
-     * Abstract class for all MySQLi Query operations.
+     * Abstract class for all Mysqli Query operations.
      *
-     * @package PHY\Database\MySQLi\Query\Operation
+     * @package PHY\Database\Mysqli\Query\Operation
      * @category PHY\Phyneapple
      * @copyright Copyright (c) 2013 Phyneapple! (http://www.phyneapple.com/)
      * @license http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
@@ -43,7 +43,7 @@
          * Set a manager to use with our objects.
          * 
          * @param \PHY\Database\IManager $manager
-         * @return \PHY\Database\MySQLi\Query\Operation
+         * @return \PHY\Database\Mysqli\Query\Operation
          */
         public function setManager(\PHY\Database\IManager $manager)
         {
@@ -68,7 +68,7 @@
          * Set a model to use with our operation.
          *
          * @param \PHY\Model\Entity $model
-         * @return \PHY\Database\MySQLi\Query\Operation
+         * @return \PHY\Database\Mysqli\Query\Operation
          */
         public function setModel(\PHY\Model\Entity $model)
         {
@@ -80,12 +80,12 @@
          * Get the defined model for our operation.
          *
          * @return \PHY\Model\Entity
-         * @throws \PHY\Database\MySQLi\Operation\Exception
+         * @throws \PHY\Database\Mysqli\Operation\Exception
          */
         public function getModel()
         {
             if (!$this->hasResource('model')) {
-                throw new \PHY\Database\MySQLi\Operation\Exception('No model has been set for this operation.');
+                throw new \PHY\Database\Mysqli\Operation\Exception('No model has been set for this operation.');
             }
             return $this->getResource('model');
         }

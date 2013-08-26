@@ -34,9 +34,8 @@
          */
         public function index_get()
         {
-            $this->getLayout()->addVariables('head', [
-                'title' => 'About'
-            ]);
+            $head = $this->getLayout()->block('head');
+            $head->setVariable('title', 'About');
         }
 
         /**
@@ -45,7 +44,7 @@
         public function friends_get()
         {
             $layout = $this->getLayout();
-            $config = $layout->config('about/friends');
+            $config = $layout->loadConfig('about/friends');
             $layout->setConfig($config);
         }
 

@@ -15,76 +15,54 @@
      *
      */
 
-    namespace PHY\Database\MySQLi\Query;
+    namespace PHY\Database\Mysqli\Query;
 
     /**
-     * Our Select classes should all have the same query building functions.
+     * Our Order classes should all have the same query building functions.
      *
-     * @package PHY\Database\MySQLi\Query\Select
+     * @package PHY\Database\Mysqli\Query\Order
      * @category PHY\Phyneapple
      * @copyright Copyright (c) 2013 Phyneapple! (http://www.phyneapple.com/)
      * @license http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
      * @author John Mullanaphy <john@jo.mu>
      */
-    class Select extends \PHY\Database\MySQLi\Query\Element implements \PHY\Database\Query\ISelect
+    class Order extends \PHY\Database\Mysqli\Query\Element implements \PHY\Database\Query\IOrder
     {
 
-        protected $select = [];
+        protected $order = [];
+        protected $current = [
+            'by' => null,
+            'direction' => null
+        ];
 
         /**
          * {@inheritDoc}
          */
-        public function count($field = '*', $alias = '')
+        public function by($by = '_id')
         {
-            $alias = $alias && is_string($alias)
-                ? $this->clean($alias, '`').'.'
-                : '';
-            $field = $field === '*'
-                ? '*'
-                : $this->clean($field);
-            $this->select[] = 'COUNT('.$alias.$field.')';
+            if ($this->current['direction'] !== null) {
+                $this->order[] = ' `'.$this->clean($by).'` '.$this->current['direction'].' ';
+                $this->current = [
+                    'by' => null,
+                    'direction' => null
+                ];
+            }
+            return $this;
         }
 
         /**
          * {@inheritDoc}
          */
-        public function field($field, $alias = '')
+        public function direction($direction = 'asc')
         {
-            $alias = $alias && is_string($alias)
-                ? $this->clean($alias, '`').'.'
-                : '';
-            $field = $field === '*'
-                ? '*'
-                : $this->clean($field);
-            $this->select[] = $alias.$field;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        public function max($field = '_id', $alias = '')
-        {
-            $alias = $alias && is_string($alias)
-                ? $this->clean($alias, '`').'.'
-                : '';
-            $field = $field === '*'
-                ? '*'
-                : $this->clean($field);
-            $this->select[] = 'MAX('.$alias.$field.')';
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        public function min($field = '_id', $alias = '')
-        {
-            $alias = $alias && is_string($alias)
-                ? $this->clean($alias, '`').'.'
-                : '';
-            $field = $field === '*'
-                ? '*'
-                : $this->clean($field);
-            $this->select[] = 'MIN('.$alias.$field.')';
+            if ($this->current['by'] !== null) {
+                $this->order[] = ' `'.$this->clean($this->current['by']).'` '.$direction.' ';
+                $this->current = [
+                    'by' => null,
+                    'direction' => null
+                ];
+            }
+            return $this;
         }
 
         /**
@@ -92,7 +70,7 @@
          */
         public function raw($raw)
         {
-            $this->select[] = $raw;
+            $this->order[] = $raw;
         }
 
         /**
@@ -116,7 +94,11 @@
          */
         public function toString()
         {
-            return ' SELECT '.join(', ', $this->select).' ';
+            if ($this->order) {
+                return ' ORDER BY ('.join(', ', $this->order).') ';
+            } else {
+                return ' ';
+            }
         }
 
     }

@@ -15,22 +15,22 @@
      *
      */
 
-    namespace PHY\Database\MySQLi\Query;
+    namespace PHY\Database\Mysqli\Query;
 
     /**
      * Our Where classes should all have the same query building functions.
      *
-     * @package PHY\Database\MySQLi\Query\Where
+     * @package PHY\Database\Mysqli\Query\Where
      * @category PHY\Phyneapple
      * @copyright Copyright (c) 2013 Phyneapple! (http://www.phyneapple.com/)
      * @license http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
      * @author John Mullanaphy <john@jo.mu>
      */
-    class Where extends \PHY\Database\MySQLi\Query\Element implements \PHY\Database\Query\IWhere
+    class Where extends \PHY\Database\Mysqli\Query\Element implements \PHY\Database\Query\IWhere
     {
 
         protected $where = [];
-        protected $current;
+        protected $current = [];
 
         /**
          * {@inheritDoc}
@@ -58,7 +58,7 @@
             }
             $this->current = [
                 [
-                    'field' => $this->_clean($field),
+                    'field' => $this->clean($field),
                     'alias' => $alias,
                     'value' => null,
                     'or' => false
@@ -232,7 +232,11 @@
          */
         public function toString()
         {
-            return ' WHERE ('.implode(') AND (', $this->toArray()).') ';
+            if ($this->where) {
+                return ' WHERE ('.implode(') AND (', $this->toArray()).') ';
+            } else {
+                return ' ';
+            }
         }
 
         /**
@@ -249,7 +253,7 @@
          */
         protected function checkForValue()
         {
-            $current = last($this->current);
+            $current = end($this->current);
             return $current['value'] !== null;
         }
 

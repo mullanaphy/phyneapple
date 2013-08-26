@@ -15,12 +15,12 @@
      *
      */
 
-    namespace PHY\Database\MySQLi;
+    namespace PHY\Database\Mysqli;
 
     /**
-     * Manage models using MySQLi.
+     * Manage models using Mysqli.
      *
-     * @package PHY\Database\MySQLi\Database
+     * @package PHY\Database\Mysqli\Database
      * @category PHY\Phyneapple
      * @copyright Copyright (c) 2013 Phyneapple! (http://www.phyneapple.com/)
      * @license http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
@@ -32,6 +32,20 @@
         protected $cache = null;
         protected $database = null;
         protected $model = null;
+        private static $_tables = null;
+        private static $_databases = [];
+        private static $_fieldTypes = [
+            'boolean' => 'tinyint(1) NOT NULL DEFAULT \'0\'',
+            'date' => 'datetime NOT NULL DEFAULT \'0000-00-00 00:00:00\'',
+            'id' => 'int(16) unsigned NOT NULL',
+            'int' => 'int(16) signed NOT NULL',
+            'decimal' => 'decimal(8,4) signed NOT NULL',
+            'float' => 'float(8,4) signed NOT NULL',
+            'slug' => 'varchar(32) NOT NULL',
+            'text' => 'text NOT NULL',
+            'tinyint' => 'tinyint(4) signed NOT NULL',
+            'variable' => 'varchar(255) NOT NULL'
+        ];
 
         /**
          * {@inheritDoc}
@@ -64,7 +78,7 @@
          * Set a cache to use with our manager.
          * 
          * @param \PHY\Cache\ICache $cache
-         * @return \PHY\Database\MySQLi\Manager
+         * @return \PHY\Database\Mysqli\Manager
          */
         public function setCache(\PHY\Cache\ICache $cache)
         {
@@ -88,27 +102,27 @@
         /**
          * {@inheritDoc}
          */
-        public function setModel(\PHY\Database\IEntity $model)
+        public function getModel($model)
         {
-            $this->model = $model;
-            self::createTable($this->model, $this->getDatabase(), $this->getCache());
-            return $this;
+            $model = '\PHY\Model\\'.str_replace('/', '\\', $model);
+            return new $model;
         }
 
         /**
          * {@inheritDoc}
          */
-        public function getModel()
+        public function loadModel($loadBy, $model)
         {
-            return $this->model;
+            $model = $this->getModel($model);
+            return $this->load($loadBy, $model);
         }
 
         /**
          * {@inheritDoc}
          */
-        public function load($loadBy)
+        public function load($loadBy, \PHY\Model\Entity $model)
         {
-            $model = $this->getModel();
+            self::createTable($model, $this->getDatabase(), $this->getCache());
             $source = static::parseSource($model);
             $data = false;
             $cacheable = is_numeric($source['cacheable']) && $this->getCache() !== null;
@@ -120,14 +134,20 @@
                 }
             }
             if (!$data) {
-                $data = $this->getCollection($model)->find($loadBy);
+                $query = $this->createQuery()->selectFromModel($model);
+                foreach ($loadBy as $key => $value) {
+                    $query->where->field($key, $value);
+                }
+                $query->execute();
+                $data = $query->getIterator()->fetch_assoc();
             }
-            $loadedModel = clone $model;
-            $loadedModel->set($data);
-            if ($cacheable) {
-                $this->getCache()->set(md5('mysqli/model/'.$source['name'].'/'.$model->id()), $model, $source['cacheable']);
+            if ($data) {
+                $model->set($data);
+                if ($cacheable) {
+                    $this->getCache()->set(md5('mysqli/model/'.$source['name'].'/'.$model->id()), $model, $source['cacheable']);
+                }
             }
-            return $loadedModel;
+            return $model;
         }
 
         /**
@@ -145,8 +165,9 @@
         /**
          * {@inheritDoc}
          */
-        protected function update(\PHY\Model\Entity $model)
+        public function update(\PHY\Model\Entity $model)
         {
+            self::createTable($model, $this->getDatabase(), $this->getCache());
             $data = $model->getChanged();
             $source = self::parseSource($model);
             $primary_id = $data[$source['id']];
@@ -175,8 +196,9 @@
         /**
          * {@inheritDoc}
          */
-        protected function insert(\PHY\Model\Entity $model)
+        public function insert(\PHY\Model\Entity $model)
         {
+            self::createTable($model, $this->getDatabase(), $this->getCache());
             $data = $model->toArray();
             $source = self::parseSource($model);
             $newId = 0;
@@ -207,6 +229,7 @@
          */
         public function delete(\PHY\Model\Entity $model)
         {
+            self::createTable($model, $this->getDatabase(), $this->getCache());
             $id = $model->id;
             $database = $this->getDatabase();
             $source = self::parseSource($model);
@@ -218,17 +241,25 @@
         }
 
         /**
+         * {@inheritDoc}
+         */
+        public function createQuery()
+        {
+            return new \PHY\Database\Mysqli\Query($this);
+        }
+
+        /**
          * Create a given table if it doesn't already exist and cache the
          * information pertaining to it so we don't need to keep checking during
          * every run through of our app.
          *
-         * @param \PHY\Model\Entity $item
-         * @param \PHY\Database\MySQLi $database
+         * @param \PHY\Model\Entity $model
+         * @param \PHY\Database\Mysqli $database
          * @param \PHY\Cache\ICache $cache
          * @return boolean
-         * @throws \PHY\Database\MySQLi\Exception
+         * @throws \PHY\Database\Mysqli\Exception
          */
-        protected static function createTable(\PHY\Model\Entity $item, \PHY\Database\MySQLi $database, \PHY\Cache\ICache $cache)
+        private static function createTable(\PHY\Model\Entity $model, \PHY\Database\Mysqli $database, \PHY\Cache\ICache $cache)
         {
             if (self::$_tables === null) {
                 self::$_tables = $cache->get('mysqli/tables');
@@ -238,11 +269,11 @@
             }
             $changed = false;
             $database->autocommit(false);
-            $source = self::parseSource($item->getSource());
-            foreach ($source['table'] as $alias => $table) {
+            $source = self::parseSource($model);
+            foreach ($source['schema'] as $alias => $table) {
                 if (!array_key_exists($table['table'], self::$_tables) || !self::$_tables[$table['table']]) {
-                    $database = static::getDatabaseName($database);
-                    $check = $database->single("SHOW TABLES WHERE Tables_in_".$database." = '".$table['table']."'");
+                    $databaseName = static::getDatabaseName($database);
+                    $check = $database->single("SHOW TABLES WHERE Tables_in_".$databaseName." = '".$table['table']."'");
                     if (!$check) {
                         try {
                             $id = array_key_exists('id', $table)
@@ -271,7 +302,7 @@
                                 $fields[$key] = '`'.$key.'` '.self::getFieldType($type);
                             }
                             $database->query(
-                                "CREATE TABLE IF NOT EXISTS `".$table['table']."` (".
+                                "CREATE TABLE IF NOT EXISTS `".$databaseName."`.`".$table['table']."` (".
                                 implode(",", $fields).",".
                                 implode(",", $keys['local'])."
                                 ) ENGINE=".$engine." DEFAULT CHARSET=".$charset.";".
@@ -308,20 +339,20 @@
 
         /**
          * Parse the source of our entity to a uniformed array for our various
-         * MySQLi needs.
+         * Mysqli needs.
          * 
          * @param \PHY\Model\Entity $model
          * @return array
          */
-        protected function parseSource(\PHY\Model\Entity $model)
+        private static function parseSource(\PHY\Model\Entity $model)
         {
             $source = $model->getSource();
             if (!array_key_exists('cacheable', $source)) {
                 $source['cacheable'] = 0;
             }
             if (!array_key_exists('id', $source)) {
-                if (array_key_exists('id', $source['table']['primary'])) {
-                    $source['id'] = $source['table']['primary']['id'];
+                if (array_key_exists('id', $source['schema']['primary'])) {
+                    $source['id'] = $source['schema']['primary']['id'];
                 } else {
                     $source['id'] = '_id';
                 }
@@ -337,9 +368,26 @@
          * @param scalar $id
          * @return string
          */
-        protected function getCacheKey($name, $id)
+        private static function getCacheKey($name, $id)
         {
             return md5('mysqli/model/'.$name.'/'.$id);
+        }
+
+        /**
+         * Grab our database's name
+         * 
+         * @param \PHY\Database\Mysqli $database
+         * @return string
+         */
+        private static function getDatabaseName(\PHY\Database\Mysqli $database)
+        {
+            $table = md5($database->host_info);
+            if (!array_key_exists($table, static::$_databases)) {
+                static::$_databases[$table] = $database->single("SELECT DATABASE()");
+            }
+            return array_key_exists($table, static::$_databases)
+                ? static::$_databases[$table]
+                : '';
         }
 
         /**
@@ -349,7 +397,7 @@
          * @param array $data
          * @return array
          */
-        protected function getTableData(array $table, array $data)
+        private static function getTableData(array $table, array $data)
         {
             $row = [];
             foreach ($table as $key => $value) {
@@ -360,4 +408,29 @@
             return $row;
         }
 
+        /**
+         *
+         * @param mixed $type
+         * @return string $type
+         */
+        private static function getFieldType($type)
+        {
+            if (is_array($type)) {
+                return "ENUM('".join("','", $type)."') NOT NULL";
+            } else {
+                return array_key_exists($type, static::$_fieldTypes)
+                    ? static::$_fieldTypes[$type]
+                    : $type;
+            }
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public function clean($string)
+        {
+            return $this->getDatabase()->clean($string);
+        }
+
     }
+

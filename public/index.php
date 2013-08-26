@@ -17,7 +17,7 @@
 
     namespace PHY;
 
-    require '..'.DIRECTORY_SEPARATOR.'vendor'.DIRECTORY_SEPARATOR.'autoload.php';
+require '..'.DIRECTORY_SEPARATOR.'vendor'.DIRECTORY_SEPARATOR.'autoload.php';
 
     call_user_func(
         function() {
@@ -54,7 +54,7 @@
              * Setup our site and debugging.
              */
             $app->setNamespace($request->getEnvironmental('PHY_NAMESPACE', 'default'));
-            $app->setDevelopment((bool)$request->getEnvironmental('PHY_DEVELOPMENT', false));
+            $app->setEnvironment((bool)$request->getEnvironmental('PHY_ENVIRONMENT', 'development'));
 
             /*
              * Add in our logged in user.
@@ -68,3 +68,4 @@
             $app->render($request);
         }
     );
+

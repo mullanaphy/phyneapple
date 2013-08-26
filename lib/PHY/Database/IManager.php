@@ -67,26 +67,20 @@
         public function getCache();
 
         /**
-         * Set a model to use with our manager.
-         * 
-         * @param \PHY\Database\IEntity $model
-         * @return \PHY\Database\IManager
-         */
-        public function setModel(\PHY\Database\IEntity $model);
-
-        /**
-         * Get our currently assigned model to use with our manager.
+         * Get a fresh model from our manager.
          *
+         * @param string $model
          * @return \PHY\Database\IEntity $model
          */
-        public function getModel();
+        public function getModel($model);
 
         /**
          * Load a given model from our database and return a usable class.
          *
+         * @param \PHY\Model\Entity
          * @return \PHY\Model\Entity
          */
-        public function load($loadBy);
+        public function load($loadBy, \PHY\Model\Entity $model);
 
         /**
          * Save a model to our database.
@@ -119,4 +113,19 @@
          * @return boolean
          */
         public function delete(\PHY\Model\Entity $model);
+
+        /**
+         * Return a query building object.
+         *
+         * @return \PHY\Database\IQuery
+         */
+        public function createQuery();
+
+        /**
+         * lean a string for database insertion.
+         *
+         * @param string
+         * @return string
+         */
+        public function clean($string);
     }

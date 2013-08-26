@@ -42,8 +42,10 @@
             }
             if (!array_key_exists($key, $this->resources[$namespace])) {
                 $file = false;
+
                 $paths = $this->getApp()->getPath()->getPaths(
-                    'phy'.DIRECTORY_SEPARATOR.'config'.DIRECTORY_SEPARATOR.$namespace.DIRECTORY_SEPARATOR.$key.'.json', 'phy'.DIRECTORY_SEPARATOR.'config'.DIRECTORY_SEPARATOR.'default'.DIRECTORY_SEPARATOR.$key.'.json'
+                    'config'.DIRECTORY_SEPARATOR.$namespace.DIRECTORY_SEPARATOR.$key.'.json',
+                    'config'.DIRECTORY_SEPARATOR.'default'.DIRECTORY_SEPARATOR.$key.'.json'
                 );
                 foreach ($paths as $check) {
                     if (is_readable($check)) {

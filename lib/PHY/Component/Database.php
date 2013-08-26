@@ -35,6 +35,12 @@
         public function get($key, $graceful = false)
         {
             $namespace = $this->getNamespace();
+            if (strpos($key, '.') !== false) {
+                $callMethods = explode('.', $key);
+                $key = array_shift($callMethods);
+            } else {
+                $callMethods = [];
+            }
             $values = explode('/', $key);
             if ($values) {
                 $value = array_shift($values);
@@ -69,7 +75,35 @@
                     }
                 }
             }
-            return $this->resources[$namespace][$value];
+            if ($callMethods) {
+                $temp = $this->resources[$namespace][$value];
+                foreach ($callMethods as $callMethod) {
+                    if (strpos(':', $callMethod)) {
+                        $parameters = explode(':', $callMethod);
+                        $callMethod = array_shift($parameters);
+                    } else {
+                        $parameters = [];
+                    }
+                    if (!method_exists($temp, $callMethod)) {
+                        $method = false;
+                        foreach (['get', 'has', 'is'] as $m) {
+                            if (method_exists($temp, $m.$callMethod)) {
+                                $method = $m.$callMethod;
+                                break;
+                            }
+                        }
+                        if (!$method) {
+                            throw new Exception('Magically (boo) loaded method broke the chain due to being lame... '.$callMethod.' is lame...');
+                        }
+                        $callMethod = $method;
+                    }
+                    $temp = call_user_func_array([$temp, $callMethod], $parameters);
+                }
+                return $temp;
+            } else {
+                return $this->resources[$namespace][$value];
+            }
         }
 
     }
+

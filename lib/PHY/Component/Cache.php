@@ -56,7 +56,7 @@
                     $config = $event->config;
                     if ($config) {
                         try {
-                            $cache = '\PHY\Cache\\'.$event->type;
+                            $cache = '\PHY\Cache\\'.$event->config['type'];
                             $cache = new $cache($config);
                             foreach ($config['servers'] as $host) {
                                 if (strpos($host, ':') !== false) {

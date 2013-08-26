@@ -30,21 +30,23 @@
     {
 
         protected static $_source = [
-            'primary' => [
-                'table' => 'authorize',
-                'columns' => [
-                    'request' => 'variable',
-                    'allow' => [
-                        'type' => 'variable',
-                        'comment' => 'There is a space at the beginning and end only in Table view. It is for search reasons.'
-                    ],
-                    'deny' => [
-                        'type' => 'variable',
-                        'comment' => 'There is a space at the beginning and end only in Table view. It is for search reasons.'
-                    ],
-                    'updated' => 'date',
-                    'created' => 'date',
-                    'deleted' => 'boolean'
+            'schema' => [
+                'primary' => [
+                    'table' => 'authorize',
+                    'columns' => [
+                        'request' => 'variable',
+                        'allow' => [
+                            'type' => 'variable',
+                            'comment' => 'There is a space at the beginning and end only in Table view. It is for search reasons.'
+                        ],
+                        'deny' => [
+                            'type' => 'variable',
+                            'comment' => 'There is a space at the beginning and end only in Table view. It is for search reasons.'
+                        ],
+                        'updated' => 'date',
+                        'created' => 'date',
+                        'deleted' => 'boolean'
+                    ]
                 ]
             ]
         ];
@@ -54,34 +56,34 @@
          *
          * @return boolean
          */
-        public function isAllowed(\PHY\Model\User $User)
+        public function isAllowed(\PHY\Model\user $user)
         {
             $allow = explode(' ', $this->data['allow']);
             $deny = explode(' ', $this->data['deny']);
 
-            if ($User->exists()) {
-                if (!$User->group) {
-                    $User->group = 'all';
+            if ($user->exists()) {
+                if (!$user->group) {
+                    $user->group = 'all';
                 }
 
                 /* If it's root it has full access */
-                if ($User->group === 'root') {
+                if ($user->group === 'root') {
                     $allowed = true;
                 }
 
-                /* See if a User's ID is in the approved list and not in the denied list. */ elseif (in_array($User->id, $allow) && !in_array($User->id, $deny)) {
+                /* See if a user's ID is in the approved list and not in the denied list. */ elseif (in_array($user->id, $allow) && !in_array($user->id, $deny)) {
                     $allowed = true;
                 }
 
-                /* If not, see if he's in the denied list only. */ elseif (in_array($User->id, $deny)) {
+                /* If not, see if he's in the denied list only. */ elseif (in_array($user->id, $deny)) {
                     $allowed = false;
                 }
 
-                /* If not, let's see if his group is in the allowed list and it's not in the denied list. */ elseif (in_array($User->group, $allow) && !in_array($User->group, $deny)) {
+                /* If not, let's see if his group is in the allowed list and it's not in the denied list. */ elseif (in_array($user->group, $allow) && !in_array($user->group, $deny)) {
                     $allowed = true;
                 }
 
-                /* If not, let's see if his group is in the denied list. */ elseif (in_array($User->group, $deny)) {
+                /* If not, let's see if his group is in the denied list. */ elseif (in_array($user->group, $deny)) {
                     $allowed = false;
                 }
 

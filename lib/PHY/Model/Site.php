@@ -30,23 +30,25 @@
     {
 
         protected static $_source = [
-            'primary' => [
-                'table' => 'authorize',
-                'columns' => [
-                    'theme' => 'variable',
-                    'medium' => 'variable',
-                    'development' => 'boolean',
-                    'updated' => 'date',
-                    'created' => 'date',
-                    'deleted' => 'boolean'
-                ],
-                'filler' => [
-                    'theme' => 'default',
-                    'medium' => 'www',
-                    'development' => true,
-                    'updated' => '0000-00-00 00:00:00',
-                    'created' => '0000-00-00 00:00:00',
-                    'deleted' => false
+            'schema' => [
+                'primary' => [
+                    'table' => 'authorize',
+                    'columns' => [
+                        'theme' => 'variable',
+                        'medium' => 'variable',
+                        'development' => 'boolean',
+                        'updated' => 'date',
+                        'created' => 'date',
+                        'deleted' => 'boolean'
+                    ],
+                    'filler' => [
+                        'theme' => 'default',
+                        'medium' => 'www',
+                        'development' => true,
+                        'updated' => '0000-00-00 00:00:00',
+                        'created' => '0000-00-00 00:00:00',
+                        'deleted' => false
+                    ]
                 ]
             ]
         ];

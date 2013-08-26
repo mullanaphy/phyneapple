@@ -33,7 +33,7 @@
 
         private $namespace = 'default';
         private $components = [];
-        private $development = false;
+        private $environment = 'development';
         private $path = null;
         private $debugger = null;
 
@@ -43,16 +43,14 @@
          * @param string $key
          * @return mixed|null
          */
-        public function get($key = null)
+        public function get($key)
         {
-            if (is_string($key)) {
-                if ($component = $this->parseComponent($key)) {
-                    return $component[0]->get($component[1]);
-                } else if ($this->hasComponent($key)) {
-                    return $this->getComponent($key);
-                } else {
-                    return $this->getRegistry()->get($key);
-                }
+            if ($component = $this->parseComponent($key)) {
+                return $component[0]->get($component[1]);
+            } else if ($this->hasComponent($key)) {
+                return $this->getComponent($key);
+            } else {
+                return $this->getRegistry()->get($key);
             }
         }
 
@@ -209,12 +207,12 @@
         /**
          * Set whether we're a development app or in production.
          *
-         * @param boolean $development
+         * @param string $development
          * @return \PHY\App
          */
-        public function setDevelopment($development = false)
+        public function setEnvironment($environment = false)
         {
-            $this->development = (bool)$development;
+            $this->environment = $environment;
             return $this;
         }
 
@@ -225,7 +223,7 @@
          */
         public function isDevelopment()
         {
-            return $this->development;
+            return $this->getApp('config/'.$this->environment.'/development');
         }
 
         /**
@@ -335,7 +333,9 @@
 
             /* Look for a rewrite rule */
             try {
-                $rewrite = $this->get('database')->getManager('rewrite')->loadByRequest($path, $request->getMethod());
+                $manager = $this->get('database/default.manager');
+                $rewrite = $manager->getModel('rewrite');
+                $manager->load($rewrite::loadByRequest($request), $rewrite);
                 if ($rewrite->exists()) {
                     if ($rewrite->isRedirect()) {
                         $response = new \PHY\Response;
@@ -347,9 +347,11 @@
                     }
                 }
 
+                $path = $request->getUri();
+
                 $pathParameters = explode('/', strtolower(trim($path, '/')));
                 if (count($pathParameters) >= 2) {
-                    $controller = array_shift($pathParameters);
+                    $controllerClass = array_shift($pathParameters);
                     $method = array_shift($pathParameters);
                     if (count($pathParameters)) {
                         $parameters = [
@@ -368,18 +370,18 @@
                         $request->add(array_combine($parameters[0], $parameters[1]));
                     }
                 } else if (count($pathParameters)) {
-                    $controller = current($pathParameters);
-                    if (!$controller) {
-                        $controller = 'index';
+                    $controllerClass = current($pathParameters);
+                    if (!$controllerClass) {
+                        $controllerClass = 'index';
                     }
                     $method = 'index';
                 } else {
-                    $controller = 'index';
+                    $controllerClass = 'index';
                     $method = 'index';
                 }
 
-                if (class_exists('\PHY\Controller\\'.$controller)) {
-                    $_ = '\PHY\Controller\\'.$controller;
+                if (class_exists('\PHY\Controller\\'.$controllerClass)) {
+                    $_ = '\PHY\Controller\\'.$controllerClass;
                     $controller = new $_($this);
                 } else {
                     $controller = new Controller\Index($this);
@@ -387,7 +389,8 @@
                 $controller->setRequest($request);
 
                 $layout = new \PHY\View\Layout;
-                $layout->addBlocks('default', $controller.'/'.$method);
+                $layout->setController($controller);
+                $layout->loadBlocks('default', $controllerClass.'/'.$method);
                 $controller->setLayout($layout);
 
                 $controller->action($method);
@@ -416,3 +419,4 @@
         }
 
     }
+

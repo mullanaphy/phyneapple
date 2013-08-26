@@ -250,4 +250,14 @@
             return '';
         }
 
+        /**
+         * Get the request's uri.
+         *
+         * @return string
+         */
+        public function getUri()
+        {
+            return $this->getEnvironmental('REQUEST_URI', '/');
+        }
+
     }

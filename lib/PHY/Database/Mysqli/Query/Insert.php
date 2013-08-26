@@ -15,18 +15,18 @@
      *
      */
 
-    namespace PHY\Database\MySQLi\Query;
+    namespace PHY\Database\Mysqli\Query;
 
     /**
      * Our Select classes should all have the same query building functions.
      *
-     * @package PHY\Database\MySQLi\Query\Insert
+     * @package PHY\Database\Mysqli\Query\Insert
      * @category PHY\Phyneapple
      * @copyright Copyright (c) 2013 Phyneapple! (http://www.phyneapple.com/)
      * @license http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
      * @author John Mullanaphy <john@jo.mu>
      */
-    class Insert extends \PHY\Database\MySQLi\Query\Operation implements \PHY\Database\Query\IInsert
+    class Insert extends \PHY\Database\Mysqli\Query\Operation implements \PHY\Database\Query\IInsert
     {
 
         protected $insert = [];

@@ -38,7 +38,7 @@
         public function __construct(\PHY\App $app = null)
         {
             parent::__construct($app);
-            $this->getLayout()->addBlocks('default', 'error');
+            $this->getLayout()->loadBlocks('default', 'error');
         }
 
         /**

@@ -15,18 +15,18 @@
      *
      */
 
-    namespace PHY\Database\MySQLi\Query;
+    namespace PHY\Database\Mysqli\Query;
 
     /**
      * Our Select classes should all have the same query building functions.
      *
-     * @package PHY\Database\MySQLi\Query\Select
+     * @package PHY\Database\Mysqli\Query\Select
      * @category PHY\Phyneapple
      * @copyright Copyright (c) 2013 Phyneapple! (http://www.phyneapple.com/)
      * @license http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
      * @author John Mullanaphy <john@jo.mu>
      */
-    class Select extends \PHY\Database\MySQLi\Query\Element implements \PHY\Database\Query\ISelect
+    class Select extends \PHY\Database\Mysqli\Query\Element implements \PHY\Database\Query\ISelect
     {
 
         protected $select = [];
@@ -116,7 +116,11 @@
          */
         public function toString()
         {
-            return ' SELECT '.join(', ', $this->select).' ';
+            if ($this->select) {
+                return ' SELECT '.join(', ', $this->select).' ';
+            } else {
+                return ' SELECT *';
+            }
         }
 
     }

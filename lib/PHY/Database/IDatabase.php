@@ -76,14 +76,14 @@
          * Set a manager to use with this class.
          *
          * @param \PHY\Database\IManager $manager
-         * @return \PHY\Database\MySQLi
+         * @return \PHY\Database\Mysqli
          */
         public function setManager(\PHY\Database\IManager $manager);
 
         /**
          * Grab our manager.
          *
-         * @return \PHY\Database\MySQLi\Manager
+         * @return \PHY\Database\Mysqli\Manager
          */
         public function getManager();
     }

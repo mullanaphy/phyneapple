@@ -18,21 +18,22 @@
     namespace PHY\Database;
 
     /**
-     * Use MySQLi as your database of choice.
+     * Use Mysqli as your database of choice.
      *
-     * @package PHY\Database\MySQLi
+     * @package PHY\Database\Mysqli
      * @category PHY\Phyneapple
      * @copyright Copyright (c) 2013 Phyneapple! (http://www.phyneapple.com/)
      * @license http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
      * @author John Mullanaphy <john@jo.mu>
      */
-    class MySQLi extends \MySQLi implements \PHY\Database\IDatabase
+    class Mysqli extends \Mysqli implements \PHY\Database\IDatabase
     {
 
         private $count = 0;
         private $debug = false;
         private $multi = false;
         private $last = false;
+        private $manager = null;
 
         /**
          * Extend this just so we can throw out an error if our Database is
@@ -45,7 +46,13 @@
          */
         public function __construct(array $settings = [])
         {
-            parent::__construct($settings['host'], $settings['username'], $settings['password'], $settings['table']);
+            parent::__construct(array_key_exists('host', $settings)
+                    ? $settings['host']
+                    : null, $settings['username'], $settings['password'], $settings['table'], array_key_exists('port', $settings)
+                    ? $settings['port']
+                    : null, array_key_exists('socket', $settings)
+                    ? $settings['socket']
+                    : null);
             if ($this->connect_error) {
                 throw new Exception('Connection Error ('.$this->connect_errno.') '.$this->connect_error);
             }
@@ -66,7 +73,7 @@
          * Prepare a SQL statement.
          *
          * @param string $sql
-         * @return MySQLi_STMT
+         * @return Mysqli_STMT
          */
         public function prepare($sql = false)
         {
@@ -88,7 +95,7 @@
          * Run a basic query.
          *
          * @param string $sql
-         * @return MySQLi_Result
+         * @return Mysqli_Result
          */
         public function query($sql = false)
         {
@@ -98,14 +105,15 @@
             if ($this->debug) {
                 $this->last();
             }
-            return parent::query($sql);
+            $result = parent::query($sql);
+            return $result;
         }
 
         /**
          * Run multiple queries.
          *
          * @param string $sql
-         * @return MySQLi_Result
+         * @return Mysqli_Result
          */
         public function multi_query($sql = false)
         {
@@ -171,7 +179,7 @@
          * SELECT statement.
          *
          * @param string $sql
-         * @return MySQLi_Result
+         * @return Mysqli_Result
          */
         public function select($sql)
         {
@@ -353,16 +361,17 @@
         /**
          * {@inheritDoc}
          */
-        public function getManager($manager = '')
+        public function getManager($entity = '')
         {
             if ($this->manager === null) {
-                $this->setManager(new \PHY\Database\MySQLi\Manager);
+                $this->setManager(new \PHY\Database\Mysqli\Manager);
             }
             if ($entity) {
                 $model = '\PHY\Model\\'.$entity;
-                $this->manager->addModel(new $model);
+                $this->manager->load(new $model);
             }
             return $this->manager;
         }
 
     }
+

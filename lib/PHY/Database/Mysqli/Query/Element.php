@@ -15,12 +15,12 @@
      *
      */
 
-    namespace PHY\Database\MySQLi\Query;
+    namespace PHY\Database\Mysqli\Query;
 
     /**
-     * Abstract class for all MySQLi Query elements.
+     * Abstract class for all Mysqli Query elements.
      *
-     * @package PHY\Database\MySQLi\Query\Element
+     * @package PHY\Database\Mysqli\Query\Element
      * @category PHY\Phyneapple
      * @copyright Copyright (c) 2013 Phyneapple! (http://www.phyneapple.com/)
      * @license http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
@@ -29,7 +29,8 @@
     abstract class Element implements \PHY\Database\Query\IElement
     {
 
-        use \PHY\TResources;
+        private $manager = null;
+        private $model = null;
 
         /**
          * {@inheritDoc}
@@ -44,7 +45,7 @@
          */
         public function setManager(\PHY\Database\IManager $manager)
         {
-            $this->setResource('manager', $database);
+            $this->manager = $manager;
             return $this;
         }
 
@@ -53,17 +54,42 @@
          */
         public function getManager()
         {
-            if (!$this->hasResource('manager')) {
+            if ($this->manager === null) {
                 throw new Exception('Missing a \PHY\Database\IManager object for our element.');
             }
-            return $this->getResource('manager');
+            return $this->manager;
         }
 
         /**
          * {@inheritDoc}
          */
-        protected function clean($scalar)
+        public function setModel(\PHY\Model\Entity $model)
         {
+            $this->model = $model;
+            return $this;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public function getModel()
+        {
+            if ($this->model === null) {
+                throw new Exception('Missing a \PHY\Model\Entity object for our element.');
+            }
+            return $this->manager;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public function clean($scalar, $column = false)
+        {
+            if ($column) {
+                $quotes = '`';
+            } else {
+                $quotes = "'";
+            }
             switch (gettype($scalar)) {
                 case 'float':
                 case 'double':
@@ -74,19 +100,9 @@
                 default:
                     return is_numeric($scalar)
                         ? (int)$scalar
-                        : "'".$this->getManager()->clean($scalar)."'";
+                        : $quotes.$this->getManager()->clean($scalar).$quotes;
             }
         }
 
-        /**
-         * Removed Database from our resources to try and cut down on any
-         * possible circular references.
-         *
-         * @ignore
-         */
-        public function __destruct()
-        {
-            $this->unsetResource('database');
-        }
-
     }
+

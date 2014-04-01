@@ -27,7 +27,7 @@
      * @license http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
      * @author John Mullanaphy <john@jo.mu>
      */
-    class Parser extends \PHY\View\AView
+    class Parser extends AView
     {
 
         /**
@@ -40,7 +40,7 @@
             $class = array_slice($class, 2);
             $variables = $this->getConfig();
             if (!array_key_exists('template', $variables)) {
-                $variables['template'] = strtolower(implode('/', $class)).'/content.phtml';
+                $variables['template'] = strtolower(implode('/', $class)) . '/content.phtml';
             }
             unset($variables['viewClass']);
             $this->setConfig($variables);

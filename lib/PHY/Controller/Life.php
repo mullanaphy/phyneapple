@@ -34,7 +34,25 @@
          */
         public function index_get()
         {
-            
+
+        }
+
+        /**
+         * GET /life/glider
+         */
+        public function glider_get()
+        {
+            $content = $this->getLayout()->block('content');
+            $content->setTemplate('life/glider.phtml');
+        }
+
+        /**
+         * GET /life/pulsar
+         */
+        public function pulsar_get()
+        {
+            $content = $this->getLayout()->block('content');
+            $content->setTemplate('life/pulsar.phtml');
         }
 
     }

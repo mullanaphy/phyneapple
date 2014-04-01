@@ -45,9 +45,6 @@
                                 }
                             }
                         }
-                    },
-                    "searchbox": {
-                        "viewClass": "header/searchbox"
                     }
                 }
             },
@@ -65,8 +62,8 @@
             "sidebar": {
                 "viewClass": "items",
                 "children": {
-                    "about": {
-                        "template": "about/snippet.phtml"
+                    "searchbox": {
+                        "viewClass": "header/searchbox"
                     }
                 }
             }

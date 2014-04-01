@@ -29,10 +29,6 @@
     class Task
     {
 
-        protected $response = [
-            'status' => 404,
-            'response' => 'Cron was not found.'
-        ];
         protected $settings = [
             'enabled' => false,
             'expr' => '',
@@ -57,7 +53,7 @@
          *
          * @param string $key
          * @param string $value
-         * @return \PHY\Cron\Task
+         * @return $this
          * @throws Exception
          */
         public function set($key = null, $value = '')
@@ -71,7 +67,7 @@
             } elseif (is_string($key) & array_key_exists($key, $this->settings)) {
                 $this->settings[$key] = $value;
             } else {
-                throw new Exception('Key `'.$key.'` does not exist in Cron\Task.');
+                throw new Exception('Key `' . $key . '` does not exist in Cron\Task.');
             }
             return $this;
         }
@@ -88,7 +84,7 @@
             if (array_key_exists($key, $this->settings)) {
                 return $this->settings[$key];
             } else {
-                throw new Exception('Key `'.$key.'` does not exist in Cron\Task.');
+                throw new Exception('Key `' . $key . '` does not exist in Cron\Task.');
             }
         }
 
@@ -99,7 +95,7 @@
          */
         public function response()
         {
-            return $this->response;
+            return $response;
         }
 
         /**
@@ -110,45 +106,46 @@
         public function run()
         {
             if (!$this->settings['enabled']) {
-                $this->response = [
+                $response = [
                     'status' => 403,
-                    'response' => 'This task is currently disabled. #'.__LINE__
+                    'response' => 'This task is currently disabled. #' . __LINE__
                 ];
-                return $this->response;
+                return $response;
             }
-            $Expr = new \PHY\Cron\Expr($this->settings['expr']);
+            $Expr = new Expr($this->settings['expr']);
             if (!$Expr->check(time())) {
-                $this->response = [
+                $response = [
                     'status' => 500,
-                    'response' => 'Task not scheduled to run at this time. #'.__LINE__
+                    'response' => 'Task not scheduled to run at this time. #' . __LINE__
                 ];
-                return $this->response;
+                return $response;
             }
-            $response = call_user_func_array([str_replace('/', '\\', $this->settings['controller']), $this->settings['method']], $this->settings['parameters']);
+            $response = call_user_func_array([
+                str_replace('/', '\\', $this->settings['controller']),
+                $this->settings['method']
+            ], $this->settings['parameters']);
             switch (gettype($response)) {
                 case 'bool':
-                    $this->response = [
+                    $response = [
                         'status' => 200,
                         'response' => (int)$response
                     ];
                     break;
                 case 'array':
-                    if (array_key_exists('status', $response) && $response['status'] >= 200 && $response < 600) {
-                        $this->response = $response;
-                    } else {
-                        $this->response = [
+                    if (!array_key_exists('status', $response) || $response['status'] < 200 || $response >= 600) {
+                        $response = [
                             'status' => 200,
                             'response' => $response
                         ];
                     }
                     break;
                 default:
-                    $this->response = [
+                    $response = [
                         'status' => 200,
                         'response' => $response
                     ];
             }
-            return $this->response;
+            return $response;
         }
 
     }

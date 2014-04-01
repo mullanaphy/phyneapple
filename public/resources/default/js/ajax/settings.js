@@ -1,44 +1,46 @@
 ;
-!function($){
+!function ($) {
     $.ajaxSetup({
-        url:'/rest.php',
-        dataFilter:function(data,dataType){
-            switch(dataType) {
+        url: '/rest.php',
+        dataFilter: function (data, dataType) {
+            switch (dataType) {
                 case 'json':
-                    data = data.replace('while(1);','');
+                    data = data.replace('while(1);', '');
                     break;
             }
             return data;
         },
-        error:function(e,t,s,c){
-            var m=$.parseJSON(t.responseText);
+        error: function (e, t, s, c) {
+            var m = $.parseJSON(t.responseText);
             $.popup({
-                content:m.response||'There was an ajax problem.'
+                content: m.response || 'There was an ajax problem.'
             });
         }
     });
     $.ajaxPrefilter(function (options, originalOptions, jqXHR) {
-        if(!$.isPlainObject(originalOptions.data)){
+        if (!$.isPlainObject(originalOptions.data)) {
             originalOptions.data = $.deParam(originalOptions.data);
         }
-        options.data = $.param($.extend(originalOptions.data,{
-            _ajax:1,
-            xsrf_id:$.user.xsrf_id
+        options.data = $.param($.extend(originalOptions.data, {
+            _ajax: 1,
+            xsrf_id: $.user.xsrf_id
         }));
     });
-    $(document).ajaxStart(function(){
-        if(!$('#ajax-loading').length){
+    var loading = false;
+    $(document).ajaxStart(function () {
+        if (!loading) {
             $('body')
-            .append(
-                $('<div id="ajax-loading"></div>')
-                .html($('<p>Loading...</p>'))
+                .append(
+                    $('<div id="ajax-loading"></div>')
+                        .html($('<p>Loading...</p>'))
                 );
+            loading = $('#ajax-loading');
         }
-        $('#ajax-loading').center().show();
+        loading.center().show();
     });
-    $(document).ajaxStop(function(){
-        if($('#ajax-loading').length){
-            $('#ajax-loading').hide();
+    $(document).ajaxStop(function () {
+        if (loading) {
+            loading.hide();
         }
     });
 }(jQuery);

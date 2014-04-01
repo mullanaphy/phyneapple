@@ -17,6 +17,8 @@
 
     namespace PHY\Component;
 
+    use PHY\App;
+
     /**
      * Global Session class.
      *
@@ -26,17 +28,17 @@
      * @license http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
      * @author John Mullanaphy <john@jo.mu>
      */
-    class Session extends \PHY\Component\AComponent
+    class Session extends AComponent
     {
 
         /**
          * {@inheritDoc}
          */
-        public function __construct(\PHY\App $app = null)
+        public function __construct(App $app = null)
         {
             switch (session_status()) {
                 case PHP_SESSION_DISABLED:
-                    throw Exception('Sessions are disabled so use component cookie/ instead');
+                    throw new Exception('Sessions are disabled so use component cookie/ instead');
                     break;
                 case PHP_SESSION_NONE:
                     session_start();

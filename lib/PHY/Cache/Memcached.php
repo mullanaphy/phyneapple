@@ -33,7 +33,7 @@
      * @license http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
      * @author John Mullanaphy <john@jo.mu>
      */
-    class Memcached extends \Memcached implements \PHY\Cache\ICache
+    class Memcached extends \Memcached implements ICache
     {
 
         /**
@@ -61,8 +61,8 @@
          */
         public function connect($host, $port = null, $timeout = null)
         {
-            foreach ($host as $host) {
-                parent::connect($host, $port, $timeout);
+            foreach ($host as $h) {
+                parent::connect($h, $port, $timeout);
             }
         }
 
@@ -109,7 +109,7 @@
         /**
          * {@inheritDoc}
          */
-        public function replace($node, $value = false, $expiration = 0, $flag = 0)
+        public function replace($node, $value, $expiration = 0, $flag = 0)
         {
             return parent::replace($node, $value, $flag, $expiration);
         }
@@ -117,7 +117,7 @@
         /**
          * {@inheritDoc}
          */
-        public function set($node, $value = false, $expiration = 0, $flag = 0)
+        public function set($node, $value, $expiration = 0, $flag = 0)
         {
             return parent::set($node, $value, $flag, $expiration);
         }

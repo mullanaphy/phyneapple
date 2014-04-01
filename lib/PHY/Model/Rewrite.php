@@ -17,6 +17,8 @@
 
     namespace PHY\Model;
 
+    use PHY\Http\IRequest;
+
     /**
      * Handle RewriteRules. .htaccess is for suckers stuck on Apache.
      *
@@ -26,16 +28,17 @@
      * @license http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
      * @author John Mullanaphy <john@jo.mu>
      */
-    class Rewrite extends \PHY\Model\Entity
+    class Rewrite extends Entity
     {
 
         protected static $_source = [
+            'cacheable' => true,
             'schema' => [
                 'primary' => [
                     'table' => 'rewrite',
                     'columns' => [
                         'request_method' => 'variable',
-                        'request_uri' => 'variable',
+                        'request_url' => 'variable',
                         'destination' => 'variable',
                         'redirect' => 'boolean',
                         'updated' => 'date',
@@ -50,15 +53,25 @@
         /**
          * Load a RewriteRule by its Request.
          *
-         * @param \PHY\Request $request
-         * @return \PHY\Model\Rewrite
+         * @param IRequest $request
+         * @return $this
          */
-        public static function loadByRequest(\PHY\Request $request)
+        public static function loadByRequest(IRequest $request)
         {
             return [
-                'uri' => $request->getUri(),
-                'method' => $request->getMethod()
+                'request_url' => $request->getUrl(),
+                'request_method' => $request->getMethod()
             ];
+        }
+
+        /**
+         * See if this is a redirect or not.
+         *
+         * @return boolean
+         */
+        public function isRedirect()
+        {
+            return $this->data['redirect'];
         }
 
     }

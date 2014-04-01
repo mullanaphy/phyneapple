@@ -17,6 +17,8 @@
 
     namespace PHY\Component;
 
+    use PHY\App;
+
     /**
      * Component interface
      *
@@ -32,23 +34,23 @@
         /**
          * We want our component to allow for our App to be injected on
          * initialization.
-         * 
-         * @param \PHY\App $app
+         *
+         * @param App $app
          */
-        public function __construct(\PHY\App $app = null);
+        public function __construct(App $app = null);
 
         /**
          * Set the global App so this component can reference it if need be.
          *
-         * @param \PHY\App $app
-         * @return \PHY\Component\IComponent
+         * @param App $app
+         * @return $this
          */
-        public function setApp(\PHY\App $app);
+        public function setApp(App $app);
 
         /**
          * Grab our defined App.
          *
-         * @return \PHY\App
+         * @return App
          */
         public function getApp();
 

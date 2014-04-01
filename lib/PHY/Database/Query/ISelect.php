@@ -26,7 +26,7 @@
      * @license http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
      * @author John Mullanaphy <john@jo.mu>
      */
-    interface ISelect extends \PHY\Database\Query\IElement
+    interface ISelect extends IElement
     {
 
         /**
@@ -34,16 +34,16 @@
          *
          * @param string $field
          * @param string $alias
-         * @return \PHY\Database\Query\ISelect
+         * @return $this
          */
         public function field($field, $alias = '');
 
         /**
          * Field to do a count against.
-         * 
+         *
          * @param string $field
          * @param string $alias
-         * @return \PHY\Database\Query\ISelect
+         * @return $this
          */
         public function count($field = '*', $alias = '');
 
@@ -52,7 +52,7 @@
          *
          * @param string $field
          * @param string $alias
-         * @return \PHY\Database\Query\ISelect
+         * @return $this
          */
         public function min($field = '_id', $alias = '');
 
@@ -61,15 +61,15 @@
          *
          * @param string $field
          * @param string $alias
-         * @return \PHY\Database\Query\ISelect
+         * @return $this
          */
         public function max($field = '_id', $alias = '');
 
         /**
          * Set a raw field to add.
-         * 
+         *
          * @param string $raw
-         * @return \PHY\Database\Query\ISelect
+         * @return $this
          */
         public function raw($raw);
     }

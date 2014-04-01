@@ -17,6 +17,8 @@
 
     namespace PHY\Database\Query;
 
+    use PHY\Database\IManager;
+
     /**
      * Contract for all Query elements.
      *
@@ -38,25 +40,25 @@
 
         /**
          * Set a manager to use with our objects.
-         * 
-         * @param \PHY\Database\IManager $manager
-         * @return \PHY\Database\Query\IElement
+         *
+         * @param IManager $manager
+         * @return IElement
          */
-        public function setManager(\PHY\Database\IManager $manager);
+        public function setManager(IManager $manager);
 
         /**
          * Return our manager, if none is set then throw an exception.
          *
-         * @return \PHY\Database\IManager
-         * @throws \PHY\Database\Query\Exception
+         * @return IManager
+         * @throws Exception
          */
         public function getManager();
 
         /**
          * Clean scalars and numbers.
          *
-         * @param scalar $scalar
-         * @return scalar
+         * @param mixed $scalar
+         * @return mixed
          */
         public function clean($scalar);
     }

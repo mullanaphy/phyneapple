@@ -48,7 +48,7 @@
          *
          * @param mixed $route
          * @param string $path
-         * @return \PHY\Path
+         * @return $this
          */
         public function addRoute($route = '', $path = '')
         {
@@ -75,7 +75,7 @@
             $paths = [];
             foreach ($sources as $source) {
                 foreach ($routes as $route => $path) {
-                    $paths[$route.$source] = $path.$source;
+                    $paths[$route . DIRECTORY_SEPARATOR . $source] = $path . $source;
                 }
             }
             return $paths;
@@ -83,12 +83,23 @@
 
         /**
          * Get our current list of routes.
-         * 
+         *
+         * @param string [,...] $route
          * @return array
          */
         public function getRoutes()
         {
-            return $this->routes;
+            if (func_num_args()) {
+                $routes = [];
+                foreach (func_get_args() as $route) {
+                    if (array_key_exists($route, $this->routes)) {
+                        $routes[$route] = $this->routes[$route];
+                    }
+                }
+                return $routes;
+            } else {
+                return $this->routes;
+            }
         }
 
     }

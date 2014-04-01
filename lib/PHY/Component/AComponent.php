@@ -17,6 +17,8 @@
 
     namespace PHY\Component;
 
+    use PHY\App;
+
     /**
      * Default core component calls.
      *
@@ -26,7 +28,7 @@
      * @license http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
      * @author John Mullanaphy <john@jo.mu>
      */
-    abstract class AComponent implements \PHY\Component\IComponent
+    abstract class AComponent implements IComponent
     {
 
         protected $resources = [];
@@ -35,7 +37,7 @@
         /**
          * {@inheritDoc}
          */
-        public function __construct(\PHY\App $app = null)
+        public function __construct(App $app = null)
         {
             if ($app !== null) {
                 $this->setApp($app);
@@ -45,7 +47,7 @@
         /**
          * {@inheritDoc}
          */
-        public function setApp(\PHY\App $app)
+        public function setApp(App $app)
         {
             $this->app = $app;
             return $this;
@@ -69,12 +71,14 @@
 
         /**
          * Get our currently working namespace.
-         * 
+         *
          * @return string
          */
         public function getNamespace()
         {
-            return $this->getApp()->getNamespace();
+            return $this
+                ->getApp()
+                ->getNamespace();
         }
 
         /**

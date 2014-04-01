@@ -26,7 +26,7 @@
      * @license http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
      * @author John Mullanaphy <john@jo.mu>
      */
-    class Block extends \PHY\View\AView
+    class Block extends AView
     {
 
         protected $children = [];
@@ -36,7 +36,7 @@
          */
         public function structure()
         {
-            
+
         }
 
     }

@@ -27,7 +27,7 @@
      * @license http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
      * @author John Mullanaphy <john@jo.mu>
      */
-    class Local implements \PHY\Cache\ICache
+    class Local implements ICache
     {
 
         protected $data = [];
@@ -123,10 +123,10 @@
         /**
          * {@inheritDoc}
          */
-        public function replace($node, $value = false, $expiration = 0, $flag = 0)
+        public function replace($node, $value, $expiration = 0, $flag = 0)
         {
             $key = $this->key($node);
-            $_node = new \PHY\Cache\Node($node, $value, $expiration);
+            $_node = new Node($node, $value, $expiration);
             $this->data[$key] = $_node;
             return $_node->getContent();
         }
@@ -134,13 +134,13 @@
         /**
          * {@inheritDoc}
          */
-        public function set($node, $value = false, $expiration = 0, $flag = 0)
+        public function set($node, $value, $expiration = 0, $flag = 0)
         {
             $key = $this->key($node);
             if (array_key_exists($key, $this->data)) {
                 return false;
             }
-            $_node = new \PHY\Cache\Node($node, $value, $expiration);
+            $_node = new Node($node, $value, $expiration);
             $this->data[$key] = $_node;
             return $_node->getContent();
         }

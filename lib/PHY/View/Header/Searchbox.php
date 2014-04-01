@@ -17,6 +17,8 @@
 
     namespace PHY\View\Header;
 
+    use PHY\View\AView;
+
     /**
      * Search box.
      *
@@ -26,7 +28,7 @@
      * @license http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
      * @author John Mullanaphy <john@jo.mu>
      */
-    class Searchbox extends \PHY\View\AView
+    class Searchbox extends AView
     {
 
         /**
@@ -35,8 +37,7 @@
         public function structure()
         {
             $search = $this->getLayout()->getController()->getRequest()->get('q', false);
-            $this->setTemplate('core/sections/header/searchbox.phtml')
-                ->setVariable('search', $search);
+            $this->setTemplate('core/sections/header/searchbox.phtml')->setVariable('search', $search);
         }
 
     }

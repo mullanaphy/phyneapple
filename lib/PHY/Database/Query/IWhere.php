@@ -26,14 +26,14 @@
      * @license http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
      * @author John Mullanaphy <john@jo.mu>
      */
-    interface IWhere extends \PHY\Database\Query\IElement
+    interface IWhere extends IElement
     {
 
         /**
          * Set a field to compare against.
          *
          * @param string $field
-         * @return \PHY\Database\Query\IWhere
+         * @return $this
          */
         public function field($field);
 
@@ -41,7 +41,7 @@
          * Check for results where the last $field is in $value.
          *
          * @param array $value
-         * @return \PHY\Database\Query\IWhere
+         * @return $this
          */
         public function in(array $value);
 
@@ -49,15 +49,15 @@
          * Check for results where the last $field is equal to $value.
          *
          * @param mixed $value
-         * @return \PHY\Database\Query\IWhere
+         * @return $this
          */
         public function is($value);
 
         /**
          * Check for results where the last $field is like $value.
-         * 
+         *
          * @param string $value
-         * @return \PHY\Database\Query\IWhere
+         * @return $this
          */
         public function like($value);
 
@@ -65,7 +65,7 @@
          * Check for results where the last $field isn't $value.
          *
          * @param mixed $value
-         * @return \PHY\Database\Query\IWhere
+         * @return $this
          */
         public function not($value);
 
@@ -73,7 +73,7 @@
          * For for results where the last $field isn't in $value.
          *
          * @param array $value
-         * @return \PHY\Database\Query\IWhere
+         * @return $this
          */
         public function notIn(array $value);
 
@@ -81,7 +81,7 @@
          * Check for results where the last $field isn't like $value.
          *
          * @param string $value
-         * @return \PHY\Database\Query\IWhere
+         * @return $this
          */
         public function notLike($value);
 
@@ -89,7 +89,7 @@
          * AND join the $field and the last set $field.
          *
          * @param string $field
-         * @return \PHY\Database\Query\IWhere
+         * @return $this
          */
         public function also($field);
 
@@ -97,7 +97,7 @@
          * OR join the $field and the last set $field.
          *
          * @param string $field
-         * @return \PHY\Database\Query\IWhere
+         * @return $this
          */
         public function instead($field);
 
@@ -113,7 +113,7 @@
          * See if we can get results where $field is less than $value.
          *
          * @param mixed $value
-         * @return \PHY\Database\Query\IWhere
+         * @return $this
          */
         public function lt($value);
 
@@ -121,7 +121,7 @@
          * See if we can get results where $field is greater than $value.
          *
          * @param mixed $value
-         * @return \PHY\Database\Query\IWhere
+         * @return $this
          */
         public function gt($value);
 
@@ -130,7 +130,7 @@
          * $value.
          *
          * @param mixed $value
-         * @return \PHY\Database\Query\IWhere
+         * @return $this
          */
         public function lte($value);
 
@@ -139,7 +139,7 @@
          * $value.
          *
          * @param mixed $value
-         * @return \PHY\Database\Query\IWhere
+         * @return $this
          */
         public function gte($value);
     }

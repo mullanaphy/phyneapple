@@ -32,24 +32,24 @@
         /**
          * Return a Where object.
          *
-         * @return \PHY\Model\DataMapper\Query\IWhere
+         * @return Query\IWhere
          */
         public function where();
 
         /**
          * Map function to a collection, and get back the results.
-         * 
+         *
          * @param callable $function
          * @return array
          */
-        public function map(\callable $function);
+        public function map($function);
 
         /**
          * Set whether each row returned is a mapped entity or just pure
          * database results.
-         * 
+         *
          * @param boolean $raw
-         * @return \PHY\Database\ICollection
+         * @return ICollection
          */
         public function raw($raw = false);
 
@@ -60,26 +60,26 @@
          * @param mixed $default
          * @return mixed
          */
-        public function reduce(\callable $function, $default = []);
+        public function reduce($function, $default = []);
 
         /**
          * Return a From object.
          *
-         * @return \PHY\Model\Query\IFrom
+         * @return Query\IFrom
          */
         public function from();
 
         /**
          * Return an Order object.
          *
-         * @return \PHY\Model\Query\IOrder
+         * @return Query\IOrder
          */
         public function order();
 
         /**
          * Return a Select object.
          *
-         * @return \PHY\Model\Query\ISelect
+         * @return Query\ISelect
          */
         public function select();
     }

@@ -17,6 +17,10 @@
 
     namespace PHY\Database\Mysqli;
 
+    use PHY\Database\IQuery;
+    use PHY\Database\IManager;
+    use PHY\Model\IEntity;
+
     /**
      * Our main Query element. This is in essence our query builder.
      *
@@ -26,7 +30,7 @@
      * @license http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
      * @author John Mullanaphy <john@jo.mu>
      */
-    class Query extends \PHY\Database\Mysqli\Query\Element implements \PHY\Database\IQuery
+    class Query extends Query\Element implements IQuery
     {
 
         private $elements = [];
@@ -36,7 +40,7 @@
         /**
          * {@inheritDoc}
          */
-        public function __construct(\PHY\Database\IManager $manager = null, \PHY\Model\Entity $model = null)
+        public function __construct(IManager $manager = null, IEntity $model = null)
         {
             $this->elements = static::getElements();
             if ($manager !== null) {
@@ -49,23 +53,25 @@
 
         /**
          * Create a SELECT query based on a model.
-         * 
-         * @param \PHY\Model\Entity $model
-         * @return \PHY\Database\Mysqli\Query\
+         *
+         * @param IEntity $model
+         * @return $this
          */
-        public function selectFromModel(\PHY\Model\Entity $model)
+        public function selectFromModel(IEntity $model)
         {
             $this->setModel($model);
-            $from = $this->from;
-            $select = $this->select;
+            /* @var Query\From $from */
+            $from = $this->get('from');
+            /* @var Query\Select $select */
+            $select = $this->get('select');
             $source = $model->getSource();
             foreach ($source['schema'] as $alias => $table) {
                 if ($alias === 'primary') {
                     $from->from($table['table'], $alias);
                 } else {
                     $from->leftJoin($table['table'], $alias, array_key_exists('mapping', $table)
-                            ? $table['mapping']
-                            : null);
+                        ? $table['mapping']
+                        : null);
                 }
                 $select->field('*', $alias);
             }
@@ -86,10 +92,10 @@
                 if (is_object($this->elements[$object])) {
                     return $this->elements[$object];
                 } else {
-                    throw new Exception('"'.$object.'" is not an object... I am blaming you...');
+                    throw new Exception('"' . $object . '" is not an object... I am blaming you...');
                 }
             } else {
-                throw new Exception('"'.$object.'" is undefined. Available calls are "'.implode('", "', $this->elements).'".');
+                throw new Exception('"' . $object . '" is undefined. Available calls are "' . implode('", "', $this->elements) . '".');
             }
         }
 
@@ -139,11 +145,11 @@
         protected static function getElements()
         {
             return [
-                'select' => new \PHY\Database\Mysqli\Query\Select,
-                'from' => new \PHY\Database\Mysqli\Query\From,
-                'where' => new \PHY\Database\Mysqli\Query\Where,
-                'having' => new \PHY\Database\Mysqli\Query\Having,
-                'order' => new \PHY\Database\Mysqli\Query\Order
+                'select' => new Query\Select,
+                'from' => new Query\From,
+                'where' => new Query\Where,
+                'having' => new Query\Having,
+                'order' => new Query\Order
             ];
         }
 
@@ -170,10 +176,11 @@
         /**
          * {@inheritDoc}
          */
-        public function setManager(\PHY\Database\IManager $manager)
+        public function setManager(IManager $manager)
         {
             parent::setManager($manager);
             foreach ($this->elements as $element) {
+                /* @var Query\Element $element */
                 $element->setManager($manager);
             }
             return $this;
@@ -182,14 +189,14 @@
         /**
          * {@inheritDoc}
          */
-        public function setModel(\PHY\Model\Entity $model)
+        public function setModel(IEntity $model)
         {
             parent::setModel($model);
             foreach ($this->elements as $element) {
+                /* @var Query\Element $element */
                 $element->setModel($model);
             }
             return $this;
         }
 
     }
-

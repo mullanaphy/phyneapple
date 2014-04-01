@@ -17,6 +17,9 @@
 
     namespace PHY\Model;
 
+    use PHY\TResources;
+    use PHY\Database\IDatabase;
+
     /**
      * Generic model handling.
      *
@@ -26,14 +29,14 @@
      * @license http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
      * @author John Mullanaphy <john@jo.mu>
      */
-    abstract class Entity
+    abstract class Entity implements IEntity
     {
 
-        use \PHY\TResources;
+        use TResources;
 
         protected $data = [];
         protected $initial = [];
-        protected $id;
+        protected $_id;
         protected static $_source = [
             'schema' => [
                 'primary' => [
@@ -63,7 +66,7 @@
          *
          * @param string $method
          * @param array $parameters
-         * @return \PHY\Model\Entity
+         * @return $this
          */
         public function __call($method, $parameters)
         {
@@ -71,10 +74,12 @@
             if (substr($method, 0, 6) === 'loadby') {
                 $key = str_replace('loadby', '', $method);
                 $value = $parameters[0];
-                $database = (isset($parameters[1]) && $parameters[1] instanceof \PHY\Database)
+                $database = (isset($parameters[1]) && $parameters[1] instanceof IDatabase)
                     ? $parameters[1]
                     : null;
                 return $this->load([$key => $value], $database);
+            } else {
+                return null;
             }
         }
 
@@ -95,7 +100,7 @@
          *
          * @param string $key
          * @param mixed $value
-         * @return \PHY\Model\Entity
+         * @return $this
          */
         public function __set($key, $value)
         {
@@ -116,18 +121,35 @@
          * Initialize our model.
          *
          * @param array $data
-         * @return \PHY\Model\Entity
+         * @return $this
          */
         public function init(array $data = [])
         {
-            foreach ($this->getSource()['schema'] as $alias => $table) {
+            $initial = [];
+            foreach ($this->getSource()['schema'] as $table) {
                 foreach ($table['columns'] as $key => $value) {
-                    $initial[$key] = '';
-                }
-            }
-            foreach ($initial as $key => $value) {
-                if (array_key_exists($key, $data)) {
-                    $initial[$key] = $data[$key];
+                    if (array_key_exists($key, $data)) {
+                        $initial[$key] = $data[$key];
+                    } else {
+                        switch ($value) {
+                            case 'boolean':
+                                $initial[$key] = false;
+                                break;
+                            case 'id':
+                            case 'int':
+                            case 'tinyint':
+                                $initial[$key] = 0;
+                                break;
+                            case 'decimal':
+                            case 'float':
+                                $initial[$key] = 0.0;
+                                break;
+                            case 'variable':
+                            default:
+                                $initial[$key] = '';
+                                break;
+                        }
+                    }
                 }
             }
             $this->data = $initial;
@@ -140,7 +162,8 @@
          *
          * @param string $key
          * @param mixed $value
-         * @return \PHY\Model\Entity
+         * @return $this
+         * @throws Exception
          */
         public function set($key = '', $value = '')
         {
@@ -148,10 +171,14 @@
                 foreach ($key as $k => $v) {
                     $this->set($k, $v);
                 }
-            } else if (!array_key_exists($key, $this->data)) {
-                throw new Exception(get_class($this).' does not have a key "'.$key.'" defined. Defined keys: "'.join('", "', array_keys($this->data)).'"');
-            } else if ($this->data[$key] !== $value) {
-                $this->data[$key] = $value;
+            } else {
+                if (!array_key_exists($key, $this->data)) {
+                    throw new Exception(get_class($this) . ' does not have a key "' . $key . '" defined. Defined keys: "' . join('", "', array_keys($this->data)) . '"');
+                } else {
+                    if ($this->data[$key] !== $value) {
+                        $this->data[$key] = $value;
+                    }
+                }
             }
             return $this;
         }
@@ -166,6 +193,8 @@
         {
             if (array_key_exists($key, $this->data)) {
                 return $this->data[$key];
+            } else {
+                return null;
             }
         }
 
@@ -181,12 +210,12 @@
         }
 
         /**
-         * 
-         * @return \PHY\Model\Collection
+         *
+         * @return Collection
          */
         public function getCollection()
         {
-            $collection = get_class($this).'\\Collection';
+            $collection = get_class($this) . '\\Collection';
             return new $collection;
         }
 
@@ -227,15 +256,15 @@
          */
         public function id()
         {
-            if ($this->id === null) {
+            if ($this->_id === null) {
                 $source = $this->getSource();
                 $id = array_key_exists('id', $source['schema']['primary'])
                     ? $source['schema']['primary']['id']
                     : 'id';
-                $this->id = $id;
+                $this->_id = $id;
             }
-            return array_key_exists($this->id, $this->data)
-                ? $this->data[$this->id]
+            return array_key_exists($this->_id, $this->data)
+                ? $this->data[$this->_id]
                 : false;
         }
 
@@ -251,7 +280,7 @@
 
         /**
          * Get an array of all changed values.
-         * 
+         *
          * @return array
          */
         public function getChanged()

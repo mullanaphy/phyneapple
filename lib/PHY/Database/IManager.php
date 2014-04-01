@@ -17,6 +17,9 @@
 
     namespace PHY\Database;
 
+    use PHY\Cache\ICache;
+    use PHY\Model\IEntity;
+
     /**
      * Contract for managers.
      *
@@ -32,37 +35,37 @@
         /**
          * Allow the ability to inject a database during initialization.
          *
-         * @param \PHY\Database\IDatabase $database
+         * @param IDatabase $database
          */
-        public function __construct(\PHY\Database\IDatabase $database = null);
+        public function __construct(IDatabase $database = null);
 
         /**
          * Inject our database object.
-         * 
-         * @param \PHY\Database\IDatabase $database
-         * @return \PHY\Manager\IManager
+         *
+         * @param IDatabase $database
+         * @return IManager
          */
-        public function setDatabase(\PHY\Database\IDatabase $database);
+        public function setDatabase(IDatabase $database);
 
         /**
          * Get our database object.
          *
-         * @return \PHY\Database\IDatabase $database
+         * @return IDatabase $database
          */
         public function getDatabase();
 
         /**
          * Set a cache to use with our manager.
-         * 
-         * @param \PHY\Cache\ICache $cache
-         * @return \PHY\Database\IManager
+         *
+         * @param ICache $cache
+         * @return IManager
          */
-        public function setCache(\PHY\Cache\ICache $cache);
+        public function setCache(ICache $cache);
 
         /**
          * Return our defined cache model for leveraging our load.
          *
-         * @return \PHY\Cache\ICache
+         * @return ICache
          */
         public function getCache();
 
@@ -70,54 +73,55 @@
          * Get a fresh model from our manager.
          *
          * @param string $model
-         * @return \PHY\Database\IEntity $model
+         * @return IEntity $model
          */
         public function getModel($model);
 
         /**
          * Load a given model from our database and return a usable class.
          *
-         * @param \PHY\Model\Entity
-         * @return \PHY\Model\Entity
+         * @param mixed $loadBy
+         * @param IEntity $model
+         * @return IEntity
          */
-        public function load($loadBy, \PHY\Model\Entity $model);
+        public function load($loadBy, IEntity $model);
 
         /**
          * Save a model to our database.
          *
-         * @param \PHY\Model\Entity $model
+         * @param IEntity $model
          * @return mixed
          */
-        public function save(\PHY\Model\Entity $model);
+        public function save(IEntity $model);
 
         /**
          * Update an existing model.
-         * 
-         * @param \PHY\Model\Entity $model
+         *
+         * @param IEntity $model
          * @return boolean
          */
-        public function update(\PHY\Model\Entity $model);
+        public function update(IEntity $model);
 
         /**
          * Insert a model into our database
          *
-         * @param \PHY\Model\Entity $model
-         * @return scalar
+         * @param IEntity $model
+         * @return mixed
          */
-        public function insert(\PHY\Model\Entity $model);
+        public function insert(IEntity $model);
 
         /**
          * Delete a model from our database.
-         * 
-         * @param \PHY\Model\Entity $model
+         *
+         * @param IEntity $model
          * @return boolean
          */
-        public function delete(\PHY\Model\Entity $model);
+        public function delete(IEntity $model);
 
         /**
          * Return a query building object.
          *
-         * @return \PHY\Database\IQuery
+         * @return IQuery
          */
         public function createQuery();
 

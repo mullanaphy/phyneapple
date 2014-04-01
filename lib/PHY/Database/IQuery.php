@@ -31,10 +31,10 @@
 
         /**
          * Inject our manager while loading.
-         * 
-         * @param \PHY\Database\IManager $manager
+         *
+         * @param IManager $manager
          */
-        public function __construct(\PHY\Database\IManager $manager);
+        public function __construct(IManager $manager);
 
         /**
          * Render our object down to a string if we can.
@@ -46,14 +46,14 @@
         /**
          * Set our manager.
          *
-         * @param \PHY\Database\IManager $manager
+         * @param IManager $manager
          */
-        public function setManager(\PHY\Database\IManager $manager);
+        public function setManager(IManager $manager);
 
         /**
          * Get our manager.
-         * 
-         * @return \PHY\Database\IManager
+         *
+         * @return IManager
          */
         public function getManager();
 
@@ -82,7 +82,7 @@
         /**
          * Execute our query.
          *
-         * @return \PHY\Database\IQuery
+         * @return IQuery
          */
         public function execute();
     }

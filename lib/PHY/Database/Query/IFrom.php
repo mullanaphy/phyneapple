@@ -26,7 +26,7 @@
      * @license http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
      * @author John Mullanaphy <john@jo.mu>
      */
-    interface IFrom extends \PHY\Database\Query\IElement
+    interface IFrom extends IElement
     {
 
         /**
@@ -34,9 +34,9 @@
          *
          * @param string $table
          * @param string $alias
-         * @return \PHY\Database\Query\IFrom
+         * @return $this
          */
-        public function from($table = '', $alias = false);
+        public function from($table = '', $alias = '');
 
         /**
          * Left Join a second table, $alias is a $key => $value mapping, $key is
@@ -47,7 +47,7 @@
          * @param string $table
          * @param mixed $alias
          * @param array $mapping
-         * @return \PHY\Database\Query\IFrom
+         * @return $this
          */
         public function leftJoin($table = '', $alias = false, array $mapping = []);
 
@@ -60,7 +60,7 @@
          * @param string $table
          * @param mixed $alias
          * @param array $mapping
-         * @return \PHY\Database\Query\IFrom
+         * @return $this
          */
         public function rightJoin($table = '', $alias = false, array $mapping = []);
 
@@ -73,7 +73,7 @@
          * @param string $table
          * @param mixed $alias
          * @param array $mapping
-         * @return \PHY\Database\Query\IFrom
+         * @return $this
          */
         public function innerJoin($table = '', $alias = false, array $mapping = []);
 
@@ -86,7 +86,7 @@
          * @param string $table
          * @param mixed $alias
          * @param array $mapping
-         * @return \PHY\Database\Query\IFrom
+         * @return $this
          */
         public function outerJoin($table = '', $alias = false, array $mapping = []);
 
@@ -97,7 +97,7 @@
          * @param string $table
          * @param mixed $alias
          * @param array $mapping
-         * @return \PHY\Database\Query\IFrom
+         * @return $this
          */
         public function join($type = 'left', $table = '', $alias = false, array $mapping = []);
     }

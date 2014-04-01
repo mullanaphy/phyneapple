@@ -33,10 +33,7 @@
          * Extend this just so we can through out a 503 error if our Database is
          * acting flaky.
          *
-         * @param string $host
-         * @param string $username
-         * @param string $password
-         * @param string $table
+         * @param array $settings
          */
         public function __construct(array $settings = []);
 
@@ -46,23 +43,23 @@
          * @param string $sql
          * @return STMT
          */
-        public function prepare($sql = false);
+        public function prepare($sql);
 
         /**
          * Run a basic query.
          *
          * @param string $sql
-         * @return \PHY\Database\IResult
+         * @return IResult
          */
-        public function query($sql = false);
+        public function query($sql);
 
         /**
          * Run multiple queries.
          *
          * @param string $sql
-         * @return \PHY\Database\IResult
+         * @return IResult
          */
-        public function multi_query($sql = false);
+        public function multi_query($sql);
 
         /**
          * Clean a string.
@@ -70,20 +67,20 @@
          * @param string $string
          * @return string
          */
-        public function clean($string = false);
+        public function clean($string);
 
         /**
          * Set a manager to use with this class.
          *
-         * @param \PHY\Database\IManager $manager
-         * @return \PHY\Database\Mysqli
+         * @param IManager $manager
+         * @return Mysqli
          */
-        public function setManager(\PHY\Database\IManager $manager);
+        public function setManager(IManager $manager);
 
         /**
          * Grab our manager.
          *
-         * @return \PHY\Database\Mysqli\Manager
+         * @return Mysqli\Manager
          */
         public function getManager();
     }

@@ -17,6 +17,9 @@
 
     namespace PHY\Model;
 
+    use PHY\Database\ICollection;
+    use PHY\Database\IManager;
+
     /**
      * Grab collections of our precious models.
      *
@@ -26,7 +29,7 @@
      * @license http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
      * @author John Mullanaphy <john@jo.mu>
      */
-    class Collection implements \PHY\Manager\ICollection, \Iterator
+    class Collection implements ICollection, \Iterator
     {
 
         protected $items = null;
@@ -36,11 +39,11 @@
 
         /**
          * Set our manager used for our given collection.
-         * 
-         * @param \PHY\Manager\IManager $manager
-         * @return \PHY\Model\Collection
+         *
+         * @param IManager $manager
+         * @return $this
          */
-        public function setManager(\PHY\Manager\IManager $manager)
+        public function setManager(IManager $manager)
         {
             $this->manager = $manager;
             return $this;
@@ -48,8 +51,8 @@
 
         /**
          * Get our defined manager.
-         * 
-         * @return \PHY\Model\IManager
+         *
+         * @return IManager
          */
         public function getManager()
         {
@@ -59,7 +62,7 @@
         /**
          * Initialize our Query if one hasn't already been set.
          *
-         * @return \PHY\Model\Collection
+         * @return $this
          */
         public function getQuery()
         {
@@ -72,7 +75,7 @@
         /**
          * Return an entity
          *
-         * @return \PHY\Model\Entity
+         * @return IEntity
          */
         public function current()
         {
@@ -123,7 +126,7 @@
         /**
          * {@inheritDoc}
          */
-        public function map(\PHY\Manager\callable $function)
+        public function map($function)
         {
             $this->load();
             return array_map($function, $this->items);
@@ -149,7 +152,7 @@
         /**
          * {@inheritDoc}
          */
-        public function reduce(\callable $function, $default = [])
+        public function reduce($function, $default = [])
         {
             return array_reduce($this->items, $function, $default);
         }

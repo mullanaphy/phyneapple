@@ -17,6 +17,14 @@
 
     namespace PHY\View;
 
+    use PHY\View\IView;
+    use PHY\Markup\IMarkup;
+    use PHY\Markup\HTML5 as Markup;
+    use PHY\Path;
+    use PHY\TResources;
+    use PHY\Event;
+    use PHY\Event\Item as EventItem;
+
     /**
      * Abstract view class. Defines generic methods for various types of views.
      *
@@ -26,10 +34,10 @@
      * @license http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
      * @author John Mullanaphy <john@jo.mu>
      */
-    abstract class AView implements \PHY\View\IView
+    abstract class AView implements IView
     {
 
-        use \PHY\TResources;
+        use TResources;
 
         protected $name = '';
         protected $theme = 'default';
@@ -71,7 +79,7 @@
          * Set our view's name.
          *
          * @param string $name
-         * @return \PHY\View\AView
+         * @return AView
          */
         public function setName($name = '')
         {
@@ -91,43 +99,42 @@
 
         /**
          * Set a Markup builder to use with our view.
-         * 
-         * @param \PHY\Markup\AMarkup $tag
-         * @return \PHY\View\AView
+         *
+         * @param IMarkup $markup
+         * @return IView
          */
-        public function setMarkupBuilder(\PHY\Markup\AMarkup $markup)
+        public function setMarkupBuilder(IMarkup $markup)
         {
-            $event = new \PHY\Event\Item('view/markup/before', [
+            $event = new EventItem('view/markup/before', [
                 'object' => $this,
                 'markup' => $markup
-                ]);
-            \PHY\Event::dispatch($event);
+            ]);
+            Event::dispatch($event);
             $this->setResource('_markup', $event->markup);
-            $event = new \PHY\Event\Item('view/markup/after', [
+            Event::dispatch(new EventItem('view/markup/after', [
                 'object' => $this,
                 'markup' => $event->markup
-                ]);
-            \PHY\Event::dispatch($event);
+            ]));
             return $this;
         }
 
         /**
          * Return our Markup Builder.
-         * 
-         * @return \PHY\Markup\AMarkup
+         *
+         * @return IMarkup
          */
         public function getMarkupBuilder()
         {
             if (!$this->hasResource('_markup')) {
-                $this->setMarkupBuilder(new \PHY\Markup\HTML5);
+                $this->setMarkupBuilder(new Markup);
             }
             return $this->getResource('_markup');
         }
 
         /**
-         * Alias for \PHY\Markup\AView::getMarkupBuilder()
+         * Alias for AView::getMarkupBuilder()
          *
-         * @return \PHY\Markup\AMarkup
+         * @return IMarkup
          */
         public function tag()
         {
@@ -137,29 +144,32 @@
         /**
          * Dumps layout class into this object.
          *
-         * @return \PHY\View
+         * @param ILayout $layout
+         * @return IView
          */
-        public function setLayout(\PHY\View\Layout $layout)
+        public function setLayout(ILayout $layout)
         {
             $this->setResource('layout', $layout);
-            $event = new \PHY\Event\Item('view/layout/before', [
+            $event = new EventItem('view/layout/before', [
                 'object' => $this,
                 'layout' => $layout
-                ]);
-            \PHY\Event::dispatch($event);
+            ]);
+            Event::dispatch($event);
             $this->setResource('layout', $event->layout);
-            $event = new \PHY\Event\Item('view/layout/after', [
+            $event = new EventItem('view/layout/after', [
                 'object' => $this,
                 'layout' => $layout
-                ]);
-            \PHY\Event::dispatch($event);
+            ]);
+            Event::dispatch($event);
+            $this->setTheme($event->layout->getController()->getApp()->getNamespace());
             return $this;
         }
 
         /**
          * Get the Layout class.
          *
-         * @return \PHY\View\Layout
+         * @return Layout
+         * @throws Exception
          */
         public function getLayout()
         {
@@ -190,36 +200,16 @@
          * @param string $location
          * @return string
          */
-        public function url($url = '', $location = false)
+        public function url($url = '', $location = '')
         {
-            $rootPath = $this->getLayout()->getController()->getRequest()->getRootPath();
-            if (!$url) {
-                return str_replace($_SERVER['DOCUMENT_ROOT'], '', $rootPath.'/');
-            }
-
-            if (is_array($url)) {
-                $parameters = $url;
-                $url = array_shift($parameters);
-                $url .= '?'.http_build_query($parameters, '', '&amp;');
-            }
-
-            if ($location) {
-                $path = $this->getPath();
-                foreach ($path->getPaths('resources'.DIRECTORY_SEPARATOR.$this->getTheme().DIRECTORY_SEPARATOR.$location.DIRECTORY_SEPARATOR.$url, 'resources'.DIRECTORY_SEPARATOR.'default'.DIRECTORY_SEPARATOR.$location.DIRECTORY_SEPARATOR.$url) as $check => $source) {
-                    if (is_readable($check)) {
-                        return $source;
-                    }
-                }
-            }
-
-            return str_replace($_SERVER['DOCUMENT_ROOT'], '', $rootPath.$url);
+            return $this->getLayout()->getController()->url($url, $location);
         }
 
         /**
          * Set a theme to use for our view.
-         * 
+         *
          * @param string $theme
-         * @return \PHY\View\AView
+         * @return $this
          */
         public function setTheme($theme = '')
         {
@@ -293,7 +283,7 @@
         /**
          * {@inheritDoc}
          */
-        public function setPath(\PHY\Path $path)
+        public function setPath(Path $path)
         {
             $this->setResource('_path', $path);
             return $this;
@@ -325,9 +315,8 @@
                 return '';
             }
             $file = false;
-            $paths = $this->getPath()->getPaths(
-                'design'.DIRECTORY_SEPARATOR.$this->theme.DIRECTORY_SEPARATOR.'blocks'.DIRECTORY_SEPARATOR.str_replace('/', DIRECTORY_SEPARATOR, $source), 'design'.DIRECTORY_SEPARATOR.'default'.DIRECTORY_SEPARATOR.'blocks'.DIRECTORY_SEPARATOR.str_replace('/', DIRECTORY_SEPARATOR, $source)
-            );
+            $paths = $this->getPath()
+                ->getPaths('design'.DIRECTORY_SEPARATOR.$this->theme.DIRECTORY_SEPARATOR.'blocks'.DIRECTORY_SEPARATOR.str_replace('/', DIRECTORY_SEPARATOR, $source), 'design'.DIRECTORY_SEPARATOR.'default'.DIRECTORY_SEPARATOR.'blocks'.DIRECTORY_SEPARATOR.str_replace('/', DIRECTORY_SEPARATOR, $source));
             foreach ($paths as $check) {
                 if (is_file($check) && is_readable($check)) {
                     $file = $check;
@@ -335,15 +324,18 @@
                 }
             }
             if (!$file) {
-                throw new \Exception('Source file "'.$file.'" was not found.');
+                throw new \Exception('Source file "'.$file.'" was not found. Nor was "'.$source.'"');
             }
 
-            ob_start();
-            extract($this->variables);
-            $app = $this->getLayout()->getController()->getApp();
-            include $file;
-            $content = ob_get_contents();
-            ob_end_clean();
+            $content = call_user_func(function () use ($file) {
+                ob_start();
+                extract($this->variables);
+                $app = $this->getLayout()->getController()->getApp();
+                include $file;
+                $content = ob_get_contents();
+                ob_end_clean();
+                return $content;
+            });
 
             return $content;
         }
@@ -374,10 +366,10 @@
 
         /**
          * Add\change a given child of our block.
-         * 
+         *
          * @param string $child
          * @param array $config
-         * @return \PHY\View\Block
+         * @return IView
          */
         public function setChild($child, $config)
         {
@@ -397,7 +389,7 @@
          * Set all the children for a block.
          *
          * @param mixed $children
-         * return \PHY\View\Block
+         * @return IView
          */
         public function setChildren($children)
         {
@@ -407,6 +399,7 @@
 
         /**
          * Get all the block's children.
+         *
          * @return array
          */
         public function getChildren()
@@ -418,16 +411,19 @@
 
         /**
          * Get a specific child from our block.
-         * 
+         *
          * @param string $child
-         * @return \PHY\View\IView
+         * @return IView
          */
         public function child($child)
         {
             $children = $this->getChildren();
             if (array_key_exists($child, $children)) {
                 return $this->getLayout()->block($child, $children[$child]);
+            } else {
+                return null;
             }
         }
 
     }
+

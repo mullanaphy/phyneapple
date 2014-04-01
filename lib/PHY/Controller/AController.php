@@ -17,6 +17,18 @@
 
     namespace PHY\Controller;
 
+    use PHY\App;
+    use PHY\Event;
+    use PHY\Event\Item as EventItem;
+    use PHY\Http\Exception\NotFound as HttpNotFoundException;
+    use PHY\Http\IRequest;
+    use PHY\Http\IResponse;
+    use PHY\Http\Request;
+    use PHY\Http\Response;
+    use PHY\View\ILayout;
+    use PHY\View\Layout;
+    use PHY\Model\Authorize;
+
     /**
      * Boilerplate abstract class for Controllers.
      *
@@ -26,7 +38,7 @@
      * @license http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
      * @author John Mullanaphy <john@jo.mu>
      */
-    abstract class AController implements \PHY\Controller\IController
+    abstract class AController implements IController
     {
 
         protected $app = null;
@@ -41,10 +53,10 @@
 
         /**
          * Inject our app into our controller.
-         * 
-         * @param \PHY\App $app
+         *
+         * @param App $app
          */
-        public function __construct(\PHY\App $app = null)
+        public function __construct(App $app = null)
         {
             if ($app !== null) {
                 $this->setApp($app);
@@ -63,11 +75,10 @@
 
         /**
          * {@inheritDoc}
-         * @throws \PHY\Exception\HTTP\NotFound
          */
         public function index_get()
         {
-            throw new \PHY\Exception\HTTP\NotFound('No routes were found for this call... Sorry about that.');
+            throw new HttpNotFoundException('No routes were found for this call... Sorry about that.');
         }
 
         /**
@@ -77,12 +88,12 @@
         {
             $app = $this->getApp();
 
-            $event = new \PHY\Event\Item('controller/action/before', [
+            $event = new EventItem('controller/action/before', [
                 'controller' => $this,
                 'action' => $action
-                ]);
-            \PHY\Event::dispatch($event);
-            $action = $event->method;
+            ]);
+            Event::dispatch($event);
+            $action = $event->action;
             $request = $this->getRequest();
 
             /* See which route we should go with, depending on whether those methods exist or not. */
@@ -101,29 +112,30 @@
 
             /* Check our ACL table to see if this user can view the action/method or not. */
             $check = trim(strtolower(str_replace([__NAMESPACE__, '\\'], ['', '/'], get_class($this))), '/');
+
+            /* @var \PHY\Database\IManager $manager */
             $manager = $app->get('database')->getManager();
-            $authorize = $manager->loadModel(['request' => $check.'/'.$action], 'authorize');
+            $authorize = Authorize::loadByRequest($check.'/'.$action, $manager);
             if (!$authorize->isAllowed($app->getUser())) {
-                $this->redirect('unauthorized');
+                $this->redirect('error/unauthorized');
             }
-            $authorize = $manager->loadModel(['request' => $check], 'authorize');
+            $authorize = Authorize::loadByRequest($check.'/'.$action, $manager);
             if (!$authorize->isAllowed($app->getUser())) {
-                $this->redirect('unauthorized');
+                $this->redirect('error/unauthorized');
             }
 
             /* If everything is good, let's call the correct route. */
             $this->$action();
-            $event = new \PHY\Event\Item('controller/action/after', [
+            Event::dispatch(new EventItem('controller/action/after', [
                 'controller' => $this,
                 'action' => $action
-                ]);
-            \PHY\Event::dispatch($event);
+            ]));
         }
 
         /**
          * Get our global app state.
-         * 
-         * @return \PHY\App
+         *
+         * @return App
          */
         public function getApp()
         {
@@ -133,10 +145,10 @@
         /**
          * Set our global app state.
          *
-         * @param \PHY\App $app
-         * @return \PHY\Controller\AController
+         * @param App $app
+         * @return IController
          */
-        public function setApp(\PHY\App $app)
+        public function setApp(App $app)
         {
             $this->app = $app;
             return $this;
@@ -148,16 +160,14 @@
         public function getRequest()
         {
             if ($this->request === null) {
-                $event = new \PHY\Event\Item('controller/request/before', [
+                Event::dispatch(new EventItem('controller/request/before', [
                     'controller' => $this
-                    ]);
-                \PHY\Event::dispatch($event);
-                $this->request = \PHY\Request::createFromGlobal();
-                $event = new \PHY\Event\Item('controller/request/after', [
+                ]));
+                $this->request = Request::createFromGlobal();
+                Event::dispatch(new EventItem('controller/request/after', [
                     'controller' => $this,
                     'request' => $this->request
-                    ]);
-                \PHY\Event::dispatch($event);
+                ]));
             }
             return $this->request;
         }
@@ -165,7 +175,7 @@
         /**
          * {@inheritDoc}
          */
-        public function setRequest(\PHY\Request $request)
+        public function setRequest(IRequest $request)
         {
             $this->request = $request;
             return $this;
@@ -177,16 +187,15 @@
         public function getResponse()
         {
             if ($this->response === null) {
-                $event = new \PHY\Event\Item('controller/response/before', [
+                Event::dispatch(new EventItem('controller/response/before', [
                     'controller' => $this
-                    ]);
-                \PHY\Event::dispatch($event);
-                $this->response = new \PHY\Response;
-                $event = new \PHY\Event\Item('controller/response/after', [
+                ]));
+                $this->response = new Response($this->getRequest()->getEnvironmentals(), $this->getApp()
+                    ->get('config/status_code'));
+                Event::dispatch(new EventItem('controller/response/after', [
                     'controller' => $this,
                     'response' => $this->response
-                    ]);
-                \PHY\Event::dispatch($event);
+                ]));
             }
             return $this->response;
         }
@@ -194,7 +203,7 @@
         /**
          * {@inheritDoc}
          */
-        public function setResponse(\PHY\Response $response)
+        public function setResponse(IResponse $response)
         {
             $this->response = $response;
             return $this;
@@ -206,17 +215,15 @@
         public function getLayout()
         {
             if ($this->layout === null) {
-                $event = new \PHY\Event\Item('controller/layout/before', [
+                Event::dispatch(new EventItem('controller/layout/before', [
                     'controller' => $this
-                    ]);
-                \PHY\Event::dispatch($event);
-                $this->layout = new \PHY\View\Layout;
+                ]));
+                $this->layout = new Layout;
                 $this->layout->setController($this);
-                $event = new \PHY\Event\Item('controller/layout/after', [
+                Event::dispatch(new EventItem('controller/layout/after', [
                     'controller' => $this,
                     'layout' => $this->layout
-                    ]);
-                \PHY\Event::dispatch($event);
+                ]));
             }
             return $this->layout;
         }
@@ -224,23 +231,23 @@
         /**
          * {@inheritDoc}
          */
-        public function setLayout(\PHY\View\Layout $Layout)
+        public function setLayout(ILayout $layout)
         {
-            $this->layout = $Layout;
+            $this->layout = $layout;
             return $this;
         }
 
         /**
-         * Generate a pathed url. Localtion
+         * Generate a pathed url.
          *
          * @param string $url
          * @param string $location
          * @return string
          */
-        public function url($url = '', $location = false)
+        public function url($url = '', $location = '')
         {
             if (!$url) {
-                return str_replace($this->getRequest()->getEnvironmental('DOCUMENT_ROOT', ''), '', $this->getApp()->getRootDir().'/');
+                return '/';
             }
 
             if (is_array($url)) {
@@ -250,17 +257,23 @@
             }
 
             if ($location) {
-                $path = $this->getApp()->getPath();
-                $routes = $path->getRoutes();
+                $app = $this->getApp();
+                $path = $app->getPath();
+                $routes = $path->getRoutes('public');
+                $paths = [];
                 foreach ($routes as $route) {
-                    $paths[$route.DIRECTORY_SEPARATOR.'public'.DIRECTORY_SEPARATOR.'resources'.DIRECTORY_SEPARATOR.$this->getApp()->getNamespace().DIRECTORY_SEPARATOR.$location.DIRECTORY_SEPARATOR.$url] = DIRECTORY_SEPARATOR.'resources'.DIRECTORY_SEPARATOR.$this->getApp()->getNamespace().DIRECTORY_SEPARATOR.$location.DIRECTORY_SEPARATOR.$url;
-                    $paths[$route.DIRECTORY_SEPARATOR.'public'.DIRECTORY_SEPARATOR.'resources'.DIRECTORY_SEPARATOR.'default'.DIRECTORY_SEPARATOR.$location.DIRECTORY_SEPARATOR.$url] = DIRECTORY_SEPARATOR.'resources'.DIRECTORY_SEPARATOR.$this->getApp()->getNamespace().DIRECTORY_SEPARATOR.$location.DIRECTORY_SEPARATOR.$url;
+                    $paths[$route.'resources'.DIRECTORY_SEPARATOR.$this->getApp()
+                        ->getNamespace().DIRECTORY_SEPARATOR.$location.DIRECTORY_SEPARATOR.$url] = DIRECTORY_SEPARATOR.'resources'.DIRECTORY_SEPARATOR.$this
+                            ->getApp()->getNamespace().DIRECTORY_SEPARATOR.$location.DIRECTORY_SEPARATOR.$url;
+                    $paths[$route.'resources'.DIRECTORY_SEPARATOR.'default'.DIRECTORY_SEPARATOR.$location.DIRECTORY_SEPARATOR.$url] = DIRECTORY_SEPARATOR.'resources'.DIRECTORY_SEPARATOR.'default'.DIRECTORY_SEPARATOR.$location.DIRECTORY_SEPARATOR.$url;
                 }
                 foreach ($paths as $check => $source) {
                     if (is_readable($check)) {
                         return $source;
                     }
                 }
+            } else {
+                $url = '/'.$url;
             }
 
             return $url;
@@ -270,11 +283,11 @@
          * Set a redirect instead of rendering the page.
          *
          * @param string|array $redirect
-         * @return \PHY\Response
+         * @return Response
          */
         public function redirect($redirect = '')
         {
-            $response = new \PHY\Response;
+            $response = new Response;
             if (is_array($redirect)) {
                 $parameters = $redirect;
                 $redirect = array_shift($parameters);
@@ -285,9 +298,7 @@
         }
 
         /**
-         * Let's render our Controller and return a response.
-         *
-         * @return \PHY\Response
+         * {@inheritDoc}
          */
         public function render()
         {
@@ -298,4 +309,3 @@
         }
 
     }
-

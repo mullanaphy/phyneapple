@@ -35,9 +35,9 @@
          * Set a query along with our exception.
          *
          * @param string $message
-         * @param scalar $code
-         * @param scalar $query
-         * @param scalar $previous
+         * @param mixed $code
+         * @param mixed $query
+         * @param mixed $previous
          */
         public function __construct($message = '', $code = null, $query = '', $previous = null)
         {

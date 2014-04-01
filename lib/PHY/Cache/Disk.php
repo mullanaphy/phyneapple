@@ -26,7 +26,7 @@
      * @license http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
      * @author John Mullanaphy <john@jo.mu>
      */
-    class Disk implements \PHY\Cache\ICache
+    class Disk implements ICache
     {
 
         protected $location = '';
@@ -146,7 +146,7 @@
         /**
          * {@inheritDoc}
          */
-        public function replace($node, $value = false, $expiration = 0, $flag = 0)
+        public function replace($node, $value, $expiration = 0, $flag = 0)
         {
             if ($this->location) {
                 $file = $this->file($node);
@@ -154,7 +154,7 @@
                     unlink($file);
                 }
                 $FILE = fopen($file, 'w+');
-                $_node = new \PHY\Cache\Node($node, $value, $expiration);
+                $_node = new Node($node, $value, $expiration);
                 fwrite($FILE, serialize($_node));
                 fclose($FILE);
                 return $_node->getContent();
@@ -165,14 +165,14 @@
         /**
          * {@inheritDoc}
          */
-        public function set($node, $value = false, $expiration = 0, $flag = 0)
+        public function set($node, $value, $expiration = 0, $flag = 0)
         {
             if ($this->location) {
                 $file = $this->file($node);
                 if (is_file($file)) {
                     return false;
                 }
-                $_node = new \PHY\Cache\Node($node, $value, $expiration);
+                $_node = new Node($node, $value, $expiration);
                 $FILE = fopen($file, 'w+');
                 fwrite($FILE, serialize($_node));
                 fclose($FILE);

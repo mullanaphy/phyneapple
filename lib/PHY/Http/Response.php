@@ -15,18 +15,18 @@
      *
      */
 
-    namespace PHY;
+    namespace PHY\Http;
 
     /**
      * Handles all the response data.
      *
-     * @package PHY\Response
+     * @package PHY\Http\Response
      * @category PHY\Phyneapple
      * @copyright Copyright (c) 2013 Phyneapple! (http://www.phyneapple.com/)
      * @license http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
      * @author John Mullanaphy <john@jo.mu>
      */
-    class Response
+    class Response implements IResponse
     {
 
         protected $headers = [];
@@ -35,12 +35,23 @@
         protected $redirect = false;
         protected $redirectStatus = 301;
         protected $statusCode = 200;
+        protected $statusCodes = [];
+        protected $environmentals = [];
         protected static $_defaultHeaders = [];
 
         /**
-         * See if our current response is a redirect.
-         *
-         * @return boolean
+         * {@inheritDoc}
+         */
+        public function __construct(array $environmentals = [], $statusCodes = [])
+        {
+            $this->environmentals = $environmentals;
+            if ($statusCodes) {
+                $this->statusCodes = $statusCodes;
+            }
+        }
+
+        /**
+         * {@inheritDoc}
          */
         public function isRedirect()
         {
@@ -48,13 +59,9 @@
         }
 
         /**
-         * Set a redirect instead of a page render.
-         *
-         * @param string $redirect
-         * @param int $redirectStatus
-         * @return \PHY\Response
+         * {@inheritDoc}
          */
-        public function redirect($redirect = false, $redirectStatus = 301)
+        public function redirect($redirect, $redirectStatus = 301)
         {
             $this->redirect = $redirect;
             $this->redirectStatus = $redirectStatus;
@@ -62,24 +69,32 @@
         }
 
         /**
-         * Render our headers and flush what we can.
+         * {@inheritDoc}
          */
         public function renderHeaders()
         {
             if ($this->isRedirect()) {
                 header('Location: '.$this->redirect, $this->redirectStatus);
-            } else if ($this->hasHeaders()) {
-                foreach ($this->getHeaders() as $key => $value) {
-                    header($key.': '.$value);
+            } else {
+                if (array_key_exists($this->statusCode, $this->statusCodes)) {
+                    $status = (array_key_exists('SERVER_PROTOCOL', $this->environmentals)
+                            ? $this->environmentals['SERVER_PROTOCOL']
+                            : 'HTTP/1.1').' '.$this->statusCode.' '.$this->statusCodes[$this->statusCode];
+                    header($status);
+                } else {
+                    http_response_code($this->statusCode);
+                }
+                if ($this->hasHeaders()) {
+                    foreach ($this->getHeaders() as $key => $value) {
+                        header($key.': '.$value);
+                    }
                 }
             }
             flush();
         }
 
         /**
-         * See if we have headers to render.
-         *
-         * @return boolean
+         * {@inheritDoc}
          */
         public function hasHeaders()
         {
@@ -87,9 +102,7 @@
         }
 
         /**
-         * Get all the defined headers so far.
-         *
-         * @return array
+         * {@inheritDoc}
          */
         public function getHeaders()
         {
@@ -97,7 +110,7 @@
         }
 
         /**
-         * Render our response body.
+         * {@inheritDoc}
          */
         public function renderContent()
         {
@@ -107,19 +120,15 @@
         }
 
         /**
-         * See if our response has a body.
-         *
-         * @return boolean
+         * {@inheritDoc}
          */
         public function hasContent()
         {
-            return (bool)count($this->content);
+            return !$this->isRedirect() && count($this->content);
         }
 
         /**
-         * Get our response body.
-         *
-         * @return array
+         * {@inheritDoc}
          */
         public function getContent()
         {
@@ -127,9 +136,7 @@
         }
 
         /**
-         * Add content to our response body.
-         *
-         * @param mixed $content
+         * {@inheritDoc}
          */
         public function addContent($content)
         {
@@ -137,9 +144,7 @@
         }
 
         /**
-         * Set a status code.
-         *
-         * @param int $code
+         * {@inheritDoc}
          */
         public function setStatusCode($code = 200)
         {

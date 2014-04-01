@@ -40,21 +40,21 @@
          *
          * @param string $label
          * @param mixed $content
-         * @param int $expires
+         * @param mixed $expires
          */
         public function __construct($label = '', $content = '', $expires = '')
         {
             $this->created = time();
             $this->setLabel($label);
-            $this->setExpires($expires);
             $this->setContent($content);
+            $this->setExpires($expires);
         }
 
         /**
          * Set a node's label.
          *
          * @param string $label
-         * @return \PHY\Cache\Node
+         * @return $this
          */
         public function setLabel($label = '')
         {
@@ -65,8 +65,8 @@
         /**
          * Set a node's expiration date.
          *
-         * @param string $expires
-         * @return \PHY\Cache\Node
+         * @param mixed $expires
+         * @return $this
          */
         public function setExpires($expires = '')
         {
@@ -84,7 +84,7 @@
          * Set a node's content.
          *
          * @param mixed $content
-         * @return \PHY\Cache\Node
+         * @return $this
          */
         public function setContent($content = '')
         {

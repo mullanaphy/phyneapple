@@ -26,22 +26,22 @@
      * @license http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
      * @author John Mullanaphy <john@jo.mu>
      */
-    interface IOrder extends \PHY\Database\Query\IElement
+    interface IOrder extends IElement
     {
 
         /**
          * What field we should be ordering by.
          *
          * @param string $by
-         * @return \PHY\Databsae\Query\IOrder
+         * @return $this
          */
         public function by($by = '_id');
 
         /**
          * Which direction we should be sorting by.
          *
-         * @param type $direction
-         * @return \PHY\Databsae\Query\IOrder
+         * @param string $direction
+         * @return $this
          */
         public function direction($direction = 'asc');
 
@@ -49,7 +49,7 @@
          * Set a raw field to add.
          *
          * @param string $raw
-         * @return \PHY\Database\Query\IOrder
+         * @return $this
          */
         public function raw($raw);
     }

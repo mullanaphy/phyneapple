@@ -27,7 +27,7 @@
      * @author John Mullanaphy <john@jo.mu>
      * @todo Try and minimize this class' importance.
      */
-    class Registry extends \PHY\Component\AComponent
+    class Registry extends AComponent
     {
 
         /**
@@ -67,8 +67,10 @@
         {
             if (!is_string($key)) {
                 throw new Exception('A registry key must be a string.');
-            } else if (array_key_exists($key, $this->resources)) {
-                throw new Exception('A registry key already exists for "'.$key.'".');
+            } else {
+                if (array_key_exists($key, $this->resources)) {
+                    throw new Exception('A registry key already exists for "'.$key.'".');
+                }
             }
             $this->resources[$key] = $value;
             return true;

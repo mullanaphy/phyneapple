@@ -26,7 +26,7 @@
      * @license http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
      * @author John Mullanaphy <john@jo.mu>
      */
-    class TestModel extends \PHY\Model\Entity
+    class TestModel extends Entity
     {
 
         protected static $_source = [

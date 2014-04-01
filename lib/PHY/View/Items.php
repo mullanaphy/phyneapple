@@ -26,7 +26,7 @@
      * @license http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
      * @author John Mullanaphy <john@jo.mu>
      */
-    class Items extends \PHY\View\AView
+    class Items extends AView
     {
 
         /**
@@ -36,8 +36,7 @@
         {
             if ($this->hasVariable('children')) {
                 $items = array_keys($this->getVariable('children'));
-                $this->setTemplate('generic/items.phtml')
-                    ->setVariable('items', $items);
+                $this->setTemplate('generic/items.phtml')->setVariable('items', $items);
             }
         }
 

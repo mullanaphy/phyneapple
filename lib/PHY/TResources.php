@@ -17,6 +17,8 @@
 
     namespace PHY;
 
+    use PHY\Variable\Str;
+
     /**
      * Resources
      *
@@ -30,8 +32,8 @@
     {
 
         private static $_keys = [];
-        private $resources = [];
         private static $_checks = ['get', 'set', 'has'];
+        private $resources = [];
 
         /**
          * Adds the ability to do set{:key}({:value}), get{:key}(), and
@@ -51,6 +53,7 @@
             } elseif ($check === 'uns' && strtolower(substr($method, 0, 5)) === 'unset') {
                 return $this->unsetResource($this->getKey(substr($method, 5)));
             }
+            return null;
         }
 
         /**
@@ -126,7 +129,7 @@
         /**
          * Convert camelCase to underscores.
          *
-         * @param string $name
+         * @param string $key
          * @return string
          * @internal
          */
@@ -135,7 +138,7 @@
             if (array_key_exists($key, self::$_keys)) {
                 return self::$_keys[$key];
             }
-            self::$_keys[$key] = (new \PHY\Variable\Str($key))->toUnderscore();
+            self::$_keys[$key] = (string)(new Str($key))->toUnderscore();
             return self::$_keys[$key];
         }
 

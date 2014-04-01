@@ -17,6 +17,8 @@
 
     namespace PHY\Component;
 
+    use PHY\Variable\Obj;
+
     /**
      * Config namespace
      *
@@ -26,7 +28,7 @@
      * @license http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
      * @author John Mullanaphy <john@jo.mu>
      */
-    class Config extends \PHY\Component\AComponent
+    class Config extends AComponent
     {
 
         /**
@@ -43,10 +45,10 @@
             if (!array_key_exists($key, $this->resources[$namespace])) {
                 $file = false;
 
-                $paths = $this->getApp()->getPath()->getPaths(
-                    'config'.DIRECTORY_SEPARATOR.$namespace.DIRECTORY_SEPARATOR.$key.'.json',
-                    'config'.DIRECTORY_SEPARATOR.'default'.DIRECTORY_SEPARATOR.$key.'.json'
-                );
+                $paths = $this
+                    ->getApp()
+                    ->getPath()
+                    ->getPaths('config'.DIRECTORY_SEPARATOR.$namespace.DIRECTORY_SEPARATOR.$key.'.json', 'config'.DIRECTORY_SEPARATOR.'default'.DIRECTORY_SEPARATOR.$key.'.json');
                 foreach ($paths as $check) {
                     if (is_readable($check)) {
                         $file = $check;
@@ -61,15 +63,17 @@
                 fclose($FILE);
                 $content = preg_replace('#/\*.+?\*/#is', '', $content);
                 $content = json_decode($content);
-                $this->resources[$namespace][$key] = (new \PHY\Variable\Obj($content))->toArray();
+                $this->resources[$namespace][$key] = (new Obj($content))->toArray();
             }
             if ($values) {
                 $temp = $this->resources[$namespace][$key];
                 foreach ($values as $value) {
                     if (!array_key_exists($value, $temp)) {
-                        return;
-                    } else if ($temp) {
-                        $temp = $temp[$value];
+                        return null;
+                    } else {
+                        if ($temp) {
+                            $temp = $temp[$value];
+                        }
                     }
                 }
                 return $temp;

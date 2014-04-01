@@ -45,7 +45,7 @@
          * We're overwriting the main action since we don't want to do any
          * component calls that aren't needed. In case there's something like a
          * missing database error, config error, or other.
-         * 
+         *
          * @param string $action
          */
         public function action($action = 'index')
@@ -72,7 +72,7 @@
 
         /**
          * Set our error message.
-         * 
+         *
          * @param string $message
          * @return \PHY\Controller\Error
          */
@@ -98,7 +98,7 @@
          * @param int $statusCode
          * @return \PHY\Controller\Error
          */
-        public function setStatusCode($statusCode = '')
+        public function setStatusCode($statusCode = 500)
         {
             $this->statusCode = $statusCode;
             return $this;
@@ -132,12 +132,8 @@
          */
         public function index_get()
         {
-            $this->getResponse()
-                ->setStatusCode($this->getStatusCode());
-            $this->getLayout()
-                ->block('content')
-                ->setVariable('title', 'Sour Hour!')
-                ->setVariable('message', $this->getMessage());
+            $this->getResponse()->setStatusCode($this->getStatusCode());
+            $this->getLayout()->block('content')->setVariable('title', 'Sour Hour!')->setVariable('message', $this->getMessage())->setVariable('template', 'generic/message.phtml');
         }
 
     }

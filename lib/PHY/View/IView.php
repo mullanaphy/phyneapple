@@ -17,6 +17,9 @@
 
     namespace PHY\View;
 
+    use PHY\Markup\IMarkup;
+    use PHY\Path;
+
     /**
      * View contract.
      *
@@ -40,30 +43,31 @@
         public function toString();
 
         /**
-         * 
-         * @param \PHY\Markup\AMarkup $tag
-         * @return \PHY\View\AView
+         *
+         * @param IMarkup $markup
+         * @return IView
          */
-        public function setMarkupBuilder(\PHY\Markup\AMarkup $markup);
+        public function setMarkupBuilder(IMarkup $markup);
 
         /**
          * Return our Markup Builder.
-         * 
-         * @return \PHY\Markup\AMarkup
+         *
+         * @return IMarkup
          */
         public function getMarkupBuilder();
 
         /**
          * Dumps layout class into this object.
          *
-         * @return \PHY\View
+         * @param ILayout $layout
+         * @return IView
          */
-        public function setLayout(\PHY\View\Layout $layout);
+        public function setLayout(ILayout $layout);
 
         /**
          * Get the Layout class.
          *
-         * @return \PHY\View\Layout
+         * @return ILayout
          */
         public function getLayout();
 
@@ -85,13 +89,13 @@
          * @param string $location
          * @return string
          */
-        public function url($url = '', $location = false);
+        public function url($url = '', $location = '');
 
         /**
          * Set a theme to use for our view.
          *
          * @param string $theme
-         * @return \PHY\View\AView
+         * @return IView
          */
         public function setTheme($theme = '');
 
@@ -106,7 +110,7 @@
          * Set our entire config.
          *
          * @param array $variables
-         * @return \PHY\View\IView
+         * @return IView
          */
         public function setConfig(array $variables = []);
 
@@ -122,7 +126,7 @@
          *
          * @param string $key
          * @param mixed $value
-         * @return \PHY\View\IView
+         * @return IView
          */
         public function setVariable($key, $value);
 
@@ -146,23 +150,23 @@
          * Set a specific template file to use for our view.
          *
          * @param string $template
-         * @return \PHY\View\IView
+         * @return IView
          */
         public function setTemplate($template = '');
 
         /**
          * Set a path to use for config finding and url making.
          *
-         * @param \PHY\Path $path
-         * @return \PHY\View\IView
+         * @param Path $path
+         * @return IView
          */
-        public function setPath(\PHY\Path $path);
+        public function setPath(Path $path);
 
         /**
          * Get our path. Grab it from the global registry if one hasn't been
          * injected.
          *
-         * @return \PHY\Path
+         * @return Path
          */
         public function getPath();
     }

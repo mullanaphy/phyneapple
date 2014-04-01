@@ -17,6 +17,10 @@
 
     namespace PHY\Controller;
 
+    use PHY\Http\IRequest;
+    use PHY\Http\IResponse;
+    use PHY\View\ILayout;
+
     /**
      * Interface for Controllers.
      *
@@ -39,32 +43,47 @@
         /**
          * Grab our current request.
          *
-         * @return \PHY\Request
+         * @return IRequest
          */
         public function getRequest();
 
         /**
          * Set our current request.
          *
-         * @param \PHY\Request $Request
-         * @return \PHY\Controller\IController
+         * @param IRequest $request
+         * @return IController
          */
-        public function setRequest(\PHY\Request $Request);
+        public function setRequest(IRequest $request);
+
+        /**
+         * Grab our current response.
+         *
+         * @return IResponse
+         */
+        public function getResponse();
+
+        /**
+         * Set our current response.
+         *
+         * @param IResponse $response
+         * @return IController
+         */
+        public function setResponse(IResponse $response);
 
         /**
          * Grab our current layout.
          *
-         * @return \PHY\View\Layout
+         * @return ILayout
          */
         public function getLayout();
 
         /**
          * Set our current layout.
          *
-         * @param \PHY\View\Layout $Layout
-         * @return \PHY\Controller\IController
+         * @param ILayout $layout
+         * @return IController
          */
-        public function setLayout(\PHY\View\Layout $Layout);
+        public function setLayout(ILayout $layout);
 
         /**
          * GET /{:controller}/index
@@ -74,7 +93,7 @@
         /**
          * Render a controller.
          *
-         * @return \PHY\Response
+         * @return IResponse
          */
         public function render();
     }

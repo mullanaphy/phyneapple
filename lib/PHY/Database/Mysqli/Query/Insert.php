@@ -17,6 +17,9 @@
 
     namespace PHY\Database\Mysqli\Query;
 
+    use PHY\Database\Mysqli\Query\Operation;
+    use IInsert;
+
     /**
      * Our Select classes should all have the same query building functions.
      *
@@ -26,7 +29,7 @@
      * @license http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
      * @author John Mullanaphy <john@jo.mu>
      */
-    class Insert extends \PHY\Database\Mysqli\Query\Operation implements \PHY\Database\Query\IInsert
+    class Insert extends Operation implements IInsert
     {
 
         protected $insert = [];

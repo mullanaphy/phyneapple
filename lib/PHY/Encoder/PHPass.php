@@ -37,13 +37,10 @@
      * @license Public Domain
      * @author Solar Designer <solar at openwall.com>
      */
-    class PHPass implements \PHY\Encoder\IEncoder
+    class PHPass implements IEncoder
     {
 
-        protected $itoa64,
-            $iteration_count_log2,
-            $portable_hashes,
-            $random_state;
+        protected $itoa64, $iteration_count_log2, $portable_hashes, $random_state;
 
         public function __construct($iteration_count_log2 = 8, $portable_hashes = false)
         {
@@ -65,8 +62,9 @@
         protected function get_random_bytes($count)
         {
             $output = '';
-            if (is_readable('/dev/urandom') &&
-                ($fh = @fopen('/dev/urandom', 'rb'))) {
+            if (is_readable('/dev/urandom')
+                && ($fh = @fopen('/dev/urandom', 'rb'))
+            ) {
                 $output = fread($fh, $count);
                 fclose($fh);
             }
@@ -74,10 +72,8 @@
             if (strlen($output) < $count) {
                 $output = '';
                 for ($i = 0; $i < $count; $i += 16) {
-                    $this->random_state =
-                        md5(microtime().$this->random_state);
-                    $output .=
-                        pack('H*', md5($this->random_state));
+                    $this->random_state = md5(microtime() . $this->random_state);
+                    $output .= pack('H*', md5($this->random_state));
                 }
                 $output = substr($output, 0, $count);
             }
@@ -115,10 +111,9 @@
         protected function gensalt_private($input)
         {
             $output = '$P$';
-            $output .= $this->itoa64[min($this->iteration_count_log2 +
-                    ((PHP_VERSION >= '5')
-                        ? 5
-                        : 3), 30)];
+            $output .= $this->itoa64[min($this->iteration_count_log2 + ((PHP_VERSION >= '5')
+                ? 5
+                : 3), 30)];
             $output .= $this->encode64($input, 6);
 
             return $output;
@@ -156,14 +151,14 @@
             # consequently in lower iteration counts and hashes that are
             # quicker to crack (by non-PHP code).
             if (PHP_VERSION >= '5') {
-                $hash = md5($salt.$password, TRUE);
+                $hash = md5($salt . $password, true);
                 do {
-                    $hash = md5($hash.$password, TRUE);
+                    $hash = md5($hash . $password, true);
                 } while (--$count);
             } else {
-                $hash = pack('H*', md5($salt.$password));
+                $hash = pack('H*', md5($salt . $password));
                 do {
-                    $hash = pack('H*', md5($hash.$password));
+                    $hash = pack('H*', md5($hash . $password));
                 } while (--$count);
             }
 
@@ -241,8 +236,7 @@
 
             if (CRYPT_BLOWFISH == 1 && !$this->portable_hashes) {
                 $random = $this->get_random_bytes(16);
-                $hash =
-                    crypt($password, $this->gensalt_blowfish($random));
+                $hash = crypt($password, $this->gensalt_blowfish($random));
                 if (strlen($hash) == 60) {
                     return $hash;
                 }
@@ -261,8 +255,7 @@
             if (strlen($random) < 6) {
                 $random = $this->get_random_bytes(6);
             }
-            $hash =
-                $this->crypt_private($password, $this->gensalt_private($random));
+            $hash = $this->crypt_private($password, $this->gensalt_private($random));
             if (strlen($hash) == 34) {
                 return $hash;
             }

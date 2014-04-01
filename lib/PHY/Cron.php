@@ -45,7 +45,7 @@
          * Set all tasks that should be run.
          *
          * @param array $tasks
-         * @return \PHY\Cron
+         * @return $this
          */
         public function setTasks(array $tasks = [])
         {
@@ -65,7 +65,8 @@
 
         /**
          * Get the currently set Cron task.
-         * @return \PHY\Cron\Task
+         *
+         * @return Cron\Task
          */
         public function current()
         {
@@ -101,7 +102,7 @@
         /**
          * Grab our currently selected task's key.
          *
-         * @return scalar
+         * @return string|number
          */
         public function key()
         {
@@ -120,13 +121,13 @@
 
         /**
          * Get the path for a look file to store the lock file.
-         * 
+         *
          * @param string $label
          * @return string
          */
         public static function lock($label = '')
         {
-            return 'var'.DIRECTORY_SEPARATOR.'locks'.DIRECTORY_SEPARATOR.'cron'.DIRECTORY_SEPARATOR.md5($label).'.lock';
+            return 'var' . DIRECTORY_SEPARATOR . 'locks' . DIRECTORY_SEPARATOR . 'cron' . DIRECTORY_SEPARATOR . md5($label) . '.lock';
         }
 
     }

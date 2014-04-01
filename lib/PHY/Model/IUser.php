@@ -15,42 +15,45 @@
      *
      */
 
-    namespace PHY\Component;
+    namespace PHY\Model;
+
+    use PHY\Model\IEntity;
+    use PHY\Encoder\IEncoder;
 
     /**
-     * Global Model class.
+     * User contract.
      *
-     * @package PHY\Component\Model
+     * @package PHY\Model\IUser
      * @category PHY\Phyneapple
      * @copyright Copyright (c) 2013 Phyneapple! (http://www.phyneapple.com/)
      * @license http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
      * @author John Mullanaphy <john@jo.mu>
      */
-    class Model extends \PHY\Component\AComponent
+    interface IUser extends IEntity
     {
 
         /**
-         * {@inheritDoc}
+         * Check to see if a password matches what it should.
+         *
+         * @param string $password
+         * @param string $checkPassword
+         * @return boolean
+         * @throws Exception
          */
-        public function get($key)
-        {
-            if ($this->has($key)) {
-                $class = array_map('ucfirst', explode('/', $key));
-                $class = '\PHY\Model\\'.implode('\\', $class);
-                $model = new $class;
-                $model->setDatabase($this->getApp()->get('database'));
-                return $model;
-            }
-        }
+        public function checkPassword($password = '', $checkPassword = null);
 
         /**
-         * {@inheritDoc}
+         * Set our password encoder.
+         *
+         * @param IEncoder $encoder
+         * @return $this
          */
-        public function has($key)
-        {
-            $class = array_map('ucfirst', explode('/', $key));
-            $class = '\PHY\Model\\'.implode('\\', $class);
-            return class_exists($class);
-        }
+        public function setEncoder(IEncoder $encoder);
 
+        /**
+         * Grab our password encoder.
+         *
+         * @return IEncoder
+         */
+        public function getEncoder();
     }

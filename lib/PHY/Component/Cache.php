@@ -17,6 +17,11 @@
 
     namespace PHY\Component;
 
+    use PHY\Cache\Disk as CacheDisk;
+    use PHY\Cache\None as CacheNone;
+    use PHY\Event;
+    use PHY\Event\Item as EventItem;
+
     /**
      * Cache namespace
      *
@@ -26,7 +31,7 @@
      * @license http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
      * @author John Mullanaphy <john@jo.mu>
      */
-    class Cache extends \PHY\Component\AComponent
+    class Cache extends AComponent
     {
 
         /**
@@ -39,20 +44,27 @@
             if ($values) {
                 $value = array_shift($values);
             } else {
-                $value = $this->getApp()->get('core/component/cache');
+                $value = $this
+                    ->getApp()
+                    ->get('core/component/cache');
             }
             if (!array_key_exists($namespace, $this->resources)) {
                 $this->resources[$namespace] = [];
             }
             if (!array_key_exists($value, $this->resources[$namespace])) {
                 $cache = false;
-                if ($this->getApp()->get('config/cache')) {
-                    $config = $this->getApp()->get('config/cache/'.$value);
-                    $event = new \PHY\Event\Item('component/cache/load/before', [
+                if ($this
+                    ->getApp()
+                    ->get('config/cache')
+                ) {
+                    $config = $this
+                        ->getApp()
+                        ->get('config/cache/'.$value);
+                    $event = new EventItem('component/cache/load/before', [
                         'config' => $config,
                         'type' => $value
-                        ]);
-                    \PHY\Event::dispatch($event);
+                    ]);
+                    Event::dispatch($event);
                     $config = $event->config;
                     if ($config) {
                         try {
@@ -67,31 +79,31 @@
                                 }
                             }
                         } catch (\Exception $e) {
-                            $cache = new \PHY\Cache\None;
+                            $cache = new CacheNone;
                         }
                     }
                 } else {
-                    $config = [];
-                    $event = new \PHY\Event\Item('component/cache/load/before', [
-                        'config' => $config,
-                        'type' => $value
-                        ]);
-                    \PHY\Event::dispatch($event);
-                    $config = $event->config;
                     try {
-                        $cache = new \PHY\Cache\Disk;
+                        $config = [];
+                        $event = new EventItem('component/cache/load/before', [
+                            'config' => $config,
+                            'type' => $value
+                        ]);
+                        Event::dispatch($event);
+                        $config = $event->config;
+                        $cache = new CacheDisk($config);
                     } catch (\Exception $e) {
-                        $cache = new \PHY\Cache\None;
+                        $cache = new CacheNone;
                     }
                 }
                 if ($cache) {
                     $this->resources[$namespace][$value] = $cache;
-                    $event = new \PHY\Event\Item('component/cache/load/before', [
+                    Event::dispatch(new EventItem('component/cache/load/after', [
                         'object' => $cache,
                         'type' => $value
-                        ]);
+                    ]));
                 } else {
-                    throw new \PHY\Exception('Component "cache/'.$value.'" is undefined.');
+                    throw new Exception('Component "cache/'.$value.'" is undefined.');
                 }
             }
             return $this->resources[$namespace][$value];

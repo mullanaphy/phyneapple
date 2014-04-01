@@ -17,6 +17,9 @@
 
     namespace PHY;
 
+    use PHY\Event\IDispatcher;
+    use PHY\Event\IItem;
+
     /**
      * Event class for observing and dispatching events.
      *
@@ -35,16 +38,49 @@
          * Add an event to trigger list.
          *
          * @param string $event
-         * @param Dispatcher $dispatcher
+         * @param IDispatcher $dispatcher
          * @return bool
+         * @throws Exception
          */
-        public static function on($event, Event\Dispatcher $dispatcher)
+        public static function on($event, IDispatcher $dispatcher)
         {
             if (!is_string($event)) {
                 throw new Exception('First parameter must be a string.');
             }
             if (!array_key_exists($event, self::$_events)) {
                 self::$_events[$event] = [];
+            }
+            self::$_events[$event][] = $dispatcher;
+        }
+
+        /**
+         * Add an event to trigger list.
+         *
+         * @param string $event
+         * @param IDispatcher $dispatcher
+         * @return bool
+         * @throws Exception
+         */
+        public static function off($event, IDispatcher $dispatcher = null)
+        {
+            if (!is_string($event)) {
+                throw new Exception('First parameter must be a string.');
+            }
+            if (array_key_exists($event, self::$_events)) {
+                if ($dispatcher === null) {
+                    foreach (self::$_events[$event] as $e) {
+                        self::$_events[$event][$e] = null;
+                        unset(self::$_events[$event][$e]);
+                    }
+                    unset(self::$_events[$event]);
+                } else {
+                    foreach (self::$_events[$event] as $e => $d) {
+                        if ($d === $dispatcher) {
+                            self::$_events[$event][$e] = null;
+                            unset(self::$_events[$event][$e]);
+                        }
+                    }
+                }
             }
             self::$_events[$event][] = $dispatcher;
         }
@@ -67,10 +103,10 @@
         /**
          * Dispatch a trigger.
          *
-         * @param string $event
-         * @param array $data
+         * @param string $dispatched
+         * @param IItem $event
          */
-        public static function dispatch($dispatched = '', Event\Item $event = null)
+        public static function dispatch($dispatched = '', IItem $event = null)
         {
             /*
              * If $dispatched is an array, we'll recursively call self::dispatch
@@ -80,31 +116,35 @@
                 foreach ($dispatched as $dispatch) {
                     self::dispatch($dispatch, $event);
                 }
-            }
-            /*
-             * Otherwise, if an Event\Item is directly passed, we'll grab its
-             * already set name and pass it along.
-             */ else if ($dispatched instanceof Event\Item) {
-                self::dispatch($dispatched->getName(), $dispatched);
-            }
-
-            /*
-             * Now we'll actually dispatch our event.
-             */ else {
-                if ($event === null) {
-                    $event = new Event\Item;
-                }
-                if (array_key_exists($dispatched, self::$_events)) {
-                    $event->setTime(time());
-                    $event->setName($dispatched);
-                    $event->setChildren(array_key_exists($dispatched, self::$_events)
+            } else {
+                /*
+                 * Otherwise, if an Event\Item is directly passed, we'll grab its
+                 * already set name and pass it along.
+                 */
+                if ($dispatched instanceof Event\Item) {
+                    self::dispatch($dispatched->getName(), $dispatched);
+                } else {
+                    /*
+                     * Now we'll actually dispatch our event.
+                     */
+                    if ($event === null) {
+                        $event = new Event\Item;
+                    }
+                    if (array_key_exists($dispatched, self::$_events)) {
+                        $event->setTime(time());
+                        $event->setName($dispatched);
+                        $event->setChildren(array_key_exists($dispatched, self::$_events)
                             ? count(self::$_events[$dispatched])
                             : 0);
-                    foreach (self::$_events[$dispatched] as $key => $dispatcher) {
-                        $event->trigger();
-                        $dispatcher->dispatch($event);
-                        if (!$dispatcher->isRecurring()) {
-                            unset(self::$_events[$dispatched][$key]);
+                        foreach (self::$_events[$dispatched] as $key => $dispatcher) {
+                            /**
+                             * @var $dispatcher IDispatcher
+                             */
+                            $event->trigger();
+                            $dispatcher->dispatch($event);
+                            if (!$dispatcher->isRecurring()) {
+                                unset(self::$_events[$dispatched][$key]);
+                            }
                         }
                     }
                 }

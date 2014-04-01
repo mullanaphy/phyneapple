@@ -17,6 +17,9 @@
 
     namespace PHY\Database\Mysqli\Query;
 
+    use PHY\Database\Mysqli\Query\Element;
+    use PHY\Database\Query\IWhere;
+
     /**
      * Our Where classes should all have the same query building functions.
      *
@@ -26,7 +29,7 @@
      * @license http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
      * @author John Mullanaphy <john@jo.mu>
      */
-    class Where extends \PHY\Database\Mysqli\Query\Element implements \PHY\Database\Query\IWhere
+    class Where extends Element implements IWhere
     {
 
         protected $where = [];
@@ -41,7 +44,7 @@
 
             }
             $this->current[] = [
-                'field' => $this->_clean($field),
+                'field' => $this->clean($field),
                 'alias' => $alias,
                 'value' => null,
                 'or' => false
@@ -72,8 +75,8 @@
          */
         public function gt($value)
         {
-            $this->throwExceptionForInproperChaining();
-            $this->current[count($this->current) - 1]['value'] = ' > '.$this->clean($value);
+            $this->throwExceptionForImproperChaining();
+            $this->current[count($this->current) - 1]['value'] = ' > ' . $this->clean($value);
             return $this;
         }
 
@@ -82,8 +85,8 @@
          */
         public function gte($value)
         {
-            $this->throwExceptionForInproperChaining();
-            $this->current[count($this->current) - 1]['value'] = ' >= '.$this->clean($value);
+            $this->throwExceptionForImproperChaining();
+            $this->current[count($this->current) - 1]['value'] = ' >= ' . $this->clean($value);
             return $this;
         }
 
@@ -92,8 +95,11 @@
          */
         public function in(array $value)
         {
-            $this->throwExceptionForInproperChaining();
-            $this->current[count($this->current) - 1]['value'] = ' IN ('.implode(',', array_map([$this, 'clean'], $value)).")";
+            $this->throwExceptionForImproperChaining();
+            $this->current[count($this->current) - 1]['value'] = ' IN (' . implode(',', array_map([
+                    $this,
+                    'clean'
+                ], $value)) . ")";
             return $this;
         }
 
@@ -102,8 +108,11 @@
          */
         public function notIn(array $value)
         {
-            $this->throwExceptionForInproperChaining();
-            $this->current[count($this->current) - 1]['value'] = ' NOT IN ('.implode(',', array_map([$this, 'clean'], $value)).")";
+            $this->throwExceptionForImproperChaining();
+            $this->current[count($this->current) - 1]['value'] = ' NOT IN (' . implode(',', array_map([
+                    $this,
+                    'clean'
+                ], $value)) . ")";
             return $this;
         }
 
@@ -129,8 +138,8 @@
          */
         public function is($value)
         {
-            $this->throwExceptionForInproperChaining();
-            $this->current[count($this->current) - 1]['value'] = ' = '.$this->clean($value);
+            $this->throwExceptionForImproperChaining();
+            $this->current[count($this->current) - 1]['value'] = ' = ' . $this->clean($value);
             return $this;
         }
 
@@ -139,8 +148,8 @@
          */
         public function like($value)
         {
-            $this->throwExceptionForInproperChaining();
-            $this->current[count($this->current) - 1]['value'] = ' LIKE '.$this->clean($value);
+            $this->throwExceptionForImproperChaining();
+            $this->current[count($this->current) - 1]['value'] = ' LIKE ' . $this->clean($value);
             return $this;
         }
 
@@ -149,8 +158,8 @@
          */
         public function lt($value)
         {
-            $this->throwExceptionForInproperChaining();
-            $this->current[count($this->current) - 1]['value'] = ' < '.$this->clean($value);
+            $this->throwExceptionForImproperChaining();
+            $this->current[count($this->current) - 1]['value'] = ' < ' . $this->clean($value);
             return $this;
         }
 
@@ -159,8 +168,8 @@
          */
         public function lte($value)
         {
-            $this->throwExceptionForInproperChaining();
-            $this->current[count($this->current) - 1]['value'] = ' <= '.$this->clean($value);
+            $this->throwExceptionForImproperChaining();
+            $this->current[count($this->current) - 1]['value'] = ' <= ' . $this->clean($value);
             return $this;
         }
 
@@ -169,8 +178,8 @@
          */
         public function not($value)
         {
-            $this->throwExceptionForInproperChaining();
-            $this->current[count($this->current) - 1]['value'] = ' != '.$this->clean($value);
+            $this->throwExceptionForImproperChaining();
+            $this->current[count($this->current) - 1]['value'] = ' != ' . $this->clean($value);
             return $this;
         }
 
@@ -179,8 +188,8 @@
          */
         public function notLike($value)
         {
-            $this->throwExceptionForInproperChaining();
-            $this->current[count($this->current) - 1]['value'] = ' NOT LIKE '.$this->clean($value);
+            $this->throwExceptionForImproperChaining();
+            $this->current[count($this->current) - 1]['value'] = ' NOT LIKE ' . $this->clean($value);
             return $this;
         }
 
@@ -189,8 +198,8 @@
          */
         public function range($start, $finish)
         {
-            $this->throwExceptionForInproperChaining();
-            $this->current[count($this->current) - 1]['value'] = ' BETWEEN('.$this->clean($start).','.$this->clean($finish).')';
+            $this->throwExceptionForImproperChaining();
+            $this->current[count($this->current) - 1]['value'] = ' BETWEEN(' . $this->clean($start) . ',' . $this->clean($finish) . ')';
             return $this;
         }
 
@@ -203,16 +212,16 @@
             foreach ($this->where as $group) {
                 $first = array_shift($group);
                 $field = $first['alias']
-                    ? '`'.$this->clean($first['alias']).'`.`'.$this->clean($first['field']).'`'
-                    : '`'.$this->clean($first['field']).'`';
-                $set = $field.$first['value'];
+                    ? '`' . $this->clean($first['alias']) . '`.`' . $this->clean($first['field']) . '`'
+                    : '`' . $this->clean($first['field']) . '`';
+                $set = $field . $first['value'];
                 foreach ($group as $part) {
                     $field = $part['alias']
-                        ? '`'.$this->clean($part['alias']).'`.`'.$this->clean($part['field']).'`'
-                        : '`'.$this->clean($part['field']).'`';
-                    $set .= " ".($part['or']
+                        ? '`' . $this->clean($part['alias']) . '`.`' . $this->clean($part['field']) . '`'
+                        : '`' . $this->clean($part['field']) . '`';
+                    $set .= " " . ($part['or']
                             ? 'OR'
-                            : 'AND').' '.$field.$part['value'];
+                            : 'AND') . ' ' . $field . $part['value'];
                 }
                 $complete[] = $set;
             }
@@ -233,7 +242,7 @@
         public function toString()
         {
             if ($this->where) {
-                return ' WHERE ('.implode(') AND (', $this->toArray()).') ';
+                return ' WHERE (' . implode(') AND (', $this->toArray()) . ') ';
             } else {
                 return ' ';
             }
@@ -244,7 +253,7 @@
          */
         protected function checkForField()
         {
-            $current = last($this->current);
+            $current = end($this->current);
             return (bool)$current['field'];
         }
 
@@ -260,12 +269,14 @@
         /**
          * {@inheritDoc}
          */
-        protected function throwExceptionForInproperChaining()
+        protected function throwExceptionForImproperChaining()
         {
             if (!$this->checkForField()) {
                 throw new Exception('');
-            } else if ($this->checkForValue()) {
-                throw new Exception('');
+            } else {
+                if ($this->checkForValue()) {
+                    throw new Exception('');
+                }
             }
         }
 

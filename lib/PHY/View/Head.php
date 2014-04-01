@@ -17,6 +17,9 @@
 
     namespace PHY\View;
 
+    use PHY\Event;
+    use PHY\Event\Item as EventItem;
+
     /**
      * Head block.
      *
@@ -26,7 +29,7 @@
      * @license http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
      * @author John Mullanaphy <john@jo.mu>
      */
-    class Head extends \PHY\View\AView
+    class Head extends AView
     {
 
         /**
@@ -38,16 +41,15 @@
             $class = explode('\\', $class);
             $class = array_slice($class, 2)[0];
             $live = false;
-            $app = $this->getLayout()->getController()->getApp();
+            $controller = $this->getLayout()->getController();
+            $app = $controller->getApp();
+            $request = $controller->getRequest();
             $path = $app->getPath();
-            try {
-                $cache = $app->get('cache');
-            } catch (\Exception $e) {
-                $cache = new \PHY\Cache\Local;
-            }
+            $cache = $app->get('cache');
             $theme = $app->getNamespace();
-            $key = $theme.'/'.$class.'/block/core/head';
+            $key = $theme . '/' . $class . '/block/core/head';
             if (!($files = $cache->get($key))) {
+                $documentRoot = $request->getEnvironmental('DOCUMENT_ROOT');
                 $_files = $this->getVariable('files');
                 $files = [
                     'css' => [],
@@ -76,7 +78,7 @@
                                 $sourceFile = explode('?', $sourceFile)[0];
                             }
                             $source = false;
-                            foreach ($path->getPaths('public'.DIRECTORY_SEPARATOR.'resources'.DIRECTORY_SEPARATOR.$theme.DIRECTORY_SEPARATOR.$type.DIRECTORY_SEPARATOR.str_replace('/', DIRECTORY_SEPARATOR, $sourceFile), 'public'.DIRECTORY_SEPARATOR.'resources'.DIRECTORY_SEPARATOR.'default'.DIRECTORY_SEPARATOR.$type.DIRECTORY_SEPARATOR.str_replace('/', DIRECTORY_SEPARATOR, $sourceFile)) as $_source) {
+                            foreach ($path->getPaths('public' . DIRECTORY_SEPARATOR . 'resources' . DIRECTORY_SEPARATOR . $theme . DIRECTORY_SEPARATOR . $type . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $sourceFile), 'public' . DIRECTORY_SEPARATOR . 'resources' . DIRECTORY_SEPARATOR . 'default' . DIRECTORY_SEPARATOR . $type . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $sourceFile)) as $_source) {
                                 if (is_file($_source)) {
                                     $source = $_source;
                                     break;
@@ -85,35 +87,37 @@
                             if (!$source) {
                                 continue;
                             }
-                            $file[$defaults['key'][$type]] = str_replace(DIRECTORY_SEPARATOR, '/', str_replace($_SERVER['DOCUMENT_ROOT'], '', $source));
+                            $file[$defaults['key'][$type]] = str_replace(DIRECTORY_SEPARATOR, '/', str_replace($documentRoot, '', $source));
                             $files[$type][] = array_merge($defaults[$type], $file);
                             continue;
-                        } else if (substr($file, 0, 4) === 'http' || substr($file, 0, 2) === '//') {
-                            $files[$type][] = array_merge($defaults[$type], [
-                                $defaults['key'][$type] => $file
-                                ]);
                         } else {
-                            $sourceFile = $file;
-                            if (strpos($sourceFile, '?') !== false) {
-                                $sourceFile = explode('?', $sourceFile)[0];
-                            }
-                            $source = false;
-                            foreach ($path->getPaths('public'.DIRECTORY_SEPARATOR.'resources'.DIRECTORY_SEPARATOR.$theme.DIRECTORY_SEPARATOR.$type.DIRECTORY_SEPARATOR.str_replace('/', DIRECTORY_SEPARATOR, $sourceFile), 'public'.DIRECTORY_SEPARATOR.'resources'.DIRECTORY_SEPARATOR.'default'.DIRECTORY_SEPARATOR.$type.DIRECTORY_SEPARATOR.str_replace('/', DIRECTORY_SEPARATOR, $sourceFile)) as $_source) {
-                                if (is_file($_source)) {
-                                    $source = $_source;
-                                    break;
+                            if (substr($file, 0, 4) === 'http' || substr($file, 0, 2) === '//') {
+                                $files[$type][] = array_merge($defaults[$type], [
+                                    $defaults['key'][$type] => $file
+                                ]);
+                            } else {
+                                $sourceFile = $file;
+                                if (strpos($sourceFile, '?') !== false) {
+                                    $sourceFile = explode('?', $sourceFile)[0];
                                 }
+                                $source = false;
+                                foreach ($path->getPaths('public' . DIRECTORY_SEPARATOR . 'resources' . DIRECTORY_SEPARATOR . $theme . DIRECTORY_SEPARATOR . $type . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $sourceFile), 'public' . DIRECTORY_SEPARATOR . 'resources' . DIRECTORY_SEPARATOR . 'default' . DIRECTORY_SEPARATOR . $type . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $sourceFile)) as $_source) {
+                                    if (is_file($_source)) {
+                                        $source = $_source;
+                                        break;
+                                    }
+                                }
+                                if (!$source) {
+                                    continue;
+                                }
+                                $merge[$type][$source] = filemtime($source);
                             }
-                            if (!$source) {
-                                continue;
-                            }
-                            $merge[$type][$source] = filemtime($source);
                         }
                     }
                 }
                 if ($live) {
                     foreach ($merge as $type => $items) {
-                        $cached_file = 'resources'.DIRECTORY_SEPARATOR.'cached'.DIRECTORY_SEPARATOR.$type.DIRECTORY_SEPARATOR.md5(implode(array_keys($items)).implode($items)).'.'.$type;
+                        $cached_file = 'resources' . DIRECTORY_SEPARATOR . 'cached' . DIRECTORY_SEPARATOR . $type . DIRECTORY_SEPARATOR . md5(implode(array_keys($items)) . implode($items)) . '.' . $type;
                         if (!is_file($cached_file)) {
                             $files_content = '';
                             foreach ($items as $item => $time) {
@@ -123,43 +127,41 @@
                             }
                             if (strlen($files_content) > 0) {
                                 $FILE = fopen($cached_file, 'w');
-                                $minifier = '\PHY\Minify\\'.strtoupper($type);
+                                $minifier = '\PHY\Minify\\' . strtoupper($type);
                                 fwrite($FILE, $minifier::minify($files_content));
                                 fclose($FILE);
                             }
                         }
                         $files[$type][] = array_merge($defaults[$type], [
-                            $defaults['key'][$type] => str_replace(DIRECTORY_SEPARATOR, '/', str_replace($_SERVER['DOCUMENT_ROOT'], '', $cached_file))
-                            ]);
+                            $defaults['key'][$type] => str_replace(DIRECTORY_SEPARATOR, '/', str_replace($documentRoot, '', $cached_file))
+                        ]);
                     }
                     $cache->set($key, $files, time() + 3600);
                 } else {
                     foreach ($merge as $type => $items) {
                         foreach ($items as $item => $time) {
                             $files[$type][] = array_merge($defaults[$type], [
-                                $defaults['key'][$type] => str_replace(DIRECTORY_SEPARATOR, '/', str_replace($_SERVER['DOCUMENT_ROOT'], '', $item))
-                                ]);
+                                $defaults['key'][$type] => str_replace(DIRECTORY_SEPARATOR, '/', str_replace($documentRoot, '', $item))
+                            ]);
                         }
                     }
                 }
             }
-            $event = new \PHY\Event\Item('block/core/head', [
+            $event = new EventItem('block/core/head', [
                 'files' => $files,
                 'xsrf_id' => false
-                ]);
-            \PHY\Event::dispatch($event);
+            ]);
+            Event::dispatch($event);
             $files = $event->files;
-            $this->setTemplate('core/sections/head.phtml')
-                ->setVariable('css', $files['css'])
-                ->setVariable('js', $files['js'])
-                ->setVariable('xsrf_id', $event->xsrf_id);
+            $this->setTemplate('core/sections/head.phtml')->setVariable('css', $files['css'])
+                ->setVariable('js', $files['js'])->setVariable('xsrf_id', $event->xsrf_id);
         }
 
         /**
          * Add files to the header.
          *
          * @param string [, ...] $files
-         * @return \PHY\View\Head
+         * @return $this
          */
         public function add()
         {

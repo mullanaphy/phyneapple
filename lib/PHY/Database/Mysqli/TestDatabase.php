@@ -17,6 +17,9 @@
 
     namespace PHY\Database;
 
+    use PHY\Database\IDatabase;
+    use PHY\Database\IManager;
+
     /**
      * A database for testing purposes.
      *
@@ -26,7 +29,7 @@
      * @license http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
      * @author John Mullanaphy <john@jo.mu>
      */
-    class TestDatabase implements \PHY\Database\IDatabase
+    class TestDatabase implements IDatabase
     {
 
         /**
@@ -50,7 +53,7 @@
          */
         public function clean($string = false)
         {
-            
+
         }
 
         /**
@@ -157,4 +160,19 @@
 
         }
 
+        /**
+         * {@inheritDoc}
+         */
+        public function setManager(IManager $manager)
+        {
+
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public function getManager()
+        {
+
+        }
     }

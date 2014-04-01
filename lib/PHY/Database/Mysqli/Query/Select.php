@@ -17,6 +17,9 @@
 
     namespace PHY\Database\Mysqli\Query;
 
+    use PHY\Database\Mysqli\Query\Element;
+    use PHY\Database\Query\ISelect;
+
     /**
      * Our Select classes should all have the same query building functions.
      *
@@ -26,7 +29,7 @@
      * @license http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
      * @author John Mullanaphy <john@jo.mu>
      */
-    class Select extends \PHY\Database\Mysqli\Query\Element implements \PHY\Database\Query\ISelect
+    class Select extends Element implements ISelect
     {
 
         protected $select = [];
@@ -37,12 +40,12 @@
         public function count($field = '*', $alias = '')
         {
             $alias = $alias && is_string($alias)
-                ? $this->clean($alias, '`').'.'
+                ? $this->clean($alias, '`') . '.'
                 : '';
             $field = $field === '*'
                 ? '*'
                 : $this->clean($field);
-            $this->select[] = 'COUNT('.$alias.$field.')';
+            $this->select[] = 'COUNT(' . $alias . $field . ')';
         }
 
         /**
@@ -51,12 +54,12 @@
         public function field($field, $alias = '')
         {
             $alias = $alias && is_string($alias)
-                ? $this->clean($alias, '`').'.'
+                ? $this->clean($alias, '`') . '.'
                 : '';
             $field = $field === '*'
                 ? '*'
                 : $this->clean($field);
-            $this->select[] = $alias.$field;
+            $this->select[] = $alias . $field;
         }
 
         /**
@@ -65,12 +68,12 @@
         public function max($field = '_id', $alias = '')
         {
             $alias = $alias && is_string($alias)
-                ? $this->clean($alias, '`').'.'
+                ? $this->clean($alias, '`') . '.'
                 : '';
             $field = $field === '*'
                 ? '*'
                 : $this->clean($field);
-            $this->select[] = 'MAX('.$alias.$field.')';
+            $this->select[] = 'MAX(' . $alias . $field . ')';
         }
 
         /**
@@ -79,12 +82,12 @@
         public function min($field = '_id', $alias = '')
         {
             $alias = $alias && is_string($alias)
-                ? $this->clean($alias, '`').'.'
+                ? $this->clean($alias, '`') . '.'
                 : '';
             $field = $field === '*'
                 ? '*'
                 : $this->clean($field);
-            $this->select[] = 'MIN('.$alias.$field.')';
+            $this->select[] = 'MIN(' . $alias . $field . ')';
         }
 
         /**
@@ -117,7 +120,7 @@
         public function toString()
         {
             if ($this->select) {
-                return ' SELECT '.join(', ', $this->select).' ';
+                return ' SELECT ' . join(', ', $this->select) . ' ';
             } else {
                 return ' SELECT *';
             }

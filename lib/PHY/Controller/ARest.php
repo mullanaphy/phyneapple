@@ -17,6 +17,10 @@
 
     namespace PHY\Controller;
 
+    use PHY\Event;
+    use PHY\Event\Item as EventItem;
+    use PHY\Http\Response\Json as Response;
+
     /**
      * Boilerplate abstract class for Controllers.
      *
@@ -26,42 +30,29 @@
      * @license http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
      * @author John Mullanaphy <john@jo.mu>
      */
-    abstract class ARest extends \PHY\Controller\AController implements \PHY\Controller\IRest
+    abstract class ARest extends AController implements IRest
     {
 
         /**
          * Lazy load our Response. If one doesn't exist, we'll create a globally
          * based Request.
          *
-         * @return \PHY\Response\Rest
+         * @return IRest
          */
         public function getResponse()
         {
             if ($this->request === null) {
-                $event = new \PHY\Event\Item('controller/response/before', [
+                $event = new EventItem('controller/response/before', [
                     'controller' => $this
-                    ]);
-                \PHY\Event::dispatch($event);
-                $this->request = new \PHY\Response\Rest;
-                $event = new \PHY\Event\Item('controller/response/after', [
+                ]);
+                Event::dispatch($event);
+                $this->request = new Response;
+                Event::dispatch(new EventItem('controller/response/after', [
                     'controller' => $this,
                     'request' => $this->request
-                    ]);
-                \PHY\Event::dispatch($event);
+                ]));
             }
             return $this->request;
-        }
-
-        /**
-         * Manually set a response.
-         * 
-         * @param \PHY\Response\Rest $response
-         * @return \PHY\Controller\AController
-         */
-        public function setResponse(\PHY\Response\Rest $response)
-        {
-            $this->response = $response;
-            return $this;
         }
 
         /**
@@ -69,7 +60,7 @@
          */
         public function success($message, $status = 200)
         {
-            $response = new \PHY\Response\Rest;
+            $response = new Response;
             $response->setStatus($status);
             $response->append($message);
             return $response;
@@ -80,7 +71,7 @@
          */
         public function error($message, $status = 500)
         {
-            $response = new \PHY\Response\Rest;
+            $response = new Responset;
             $response->setStatus($status);
             $response->append($message);
             return $response;

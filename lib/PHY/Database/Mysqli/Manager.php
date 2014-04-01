@@ -17,6 +17,13 @@
 
     namespace PHY\Database\Mysqli;
 
+    use PHY\Database\IManager;
+    use PHY\Database\IDatabase;
+    use PHY\Model\IEntity;
+    use PHY\Cache\ICache;
+    use PHY\Cache\Local as CacheLocal;
+    use PHY\Variable\Int;
+
     /**
      * Manage models using Mysqli.
      *
@@ -26,7 +33,7 @@
      * @license http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
      * @author John Mullanaphy <john@jo.mu>
      */
-    class Manager implements \PHY\Database\IManager
+    class Manager implements IManager
     {
 
         protected $cache = null;
@@ -50,7 +57,7 @@
         /**
          * {@inheritDoc}
          */
-        public function __construct(\PHY\Database\IDatabase $database = null)
+        public function __construct(IDatabase $database = null)
         {
             if ($database !== null) {
                 $this->setDatabase($database);
@@ -60,7 +67,7 @@
         /**
          * {@inheritDoc}
          */
-        public function setDatabase(\PHY\Database\IDatabase $database)
+        public function setDatabase(IDatabase $database)
         {
             $this->database = $database;
             return $this;
@@ -76,11 +83,11 @@
 
         /**
          * Set a cache to use with our manager.
-         * 
-         * @param \PHY\Cache\ICache $cache
-         * @return \PHY\Database\Mysqli\Manager
+         *
+         * @param ICache $cache
+         * @return $this
          */
-        public function setCache(\PHY\Cache\ICache $cache)
+        public function setCache(ICache $cache)
         {
             $this->cache = $cache;
             return $this;
@@ -89,12 +96,12 @@
         /**
          * Return our defined cache model for leveraging our load.
          *
-         * @return \PHY\Cache\ICache
+         * @return ICache
          */
         public function getCache()
         {
             if ($this->cache === null) {
-                $this->cache = new \PHY\Cache\Local;
+                $this->cache = new CacheLocal;
             }
             return $this->cache;
         }
@@ -104,7 +111,7 @@
          */
         public function getModel($model)
         {
-            $model = '\PHY\Model\\'.str_replace('/', '\\', $model);
+            $model = '\PHY\Model\\' . str_replace('/', '\\', $model);
             return new $model;
         }
 
@@ -120,21 +127,26 @@
         /**
          * {@inheritDoc}
          */
-        public function load($loadBy, \PHY\Model\Entity $model)
+        public function load($loadBy, IEntity $model)
         {
             self::createTable($model, $this->getDatabase(), $this->getCache());
             $source = static::parseSource($model);
             $data = false;
-            $cacheable = is_numeric($source['cacheable']) && $this->getCache() !== null;
+            $cacheable = $source['cacheable'] && $this->getCache() !== null;
             if ($cacheable) {
                 if (is_scalar($loadBy)) {
                     $data = $this->getCache()->get(self::getCacheKey($source['name'], $loadBy));
-                } else if (count($loadBy) === 1 && array_key_exists($source['id'], $loadBy)) {
-                    $data = $this->getCache()->get(self::getCacheKey($source['name'], $loadBy[$source['id']]));
+                } else {
+                    if (count($loadBy) === 1 && array_key_exists($source['id'], $loadBy)) {
+                        $data = $this->getCache()->get(self::getCacheKey($source['name'], $loadBy[$source['id']]));
+                    }
                 }
             }
             if (!$data) {
                 $query = $this->createQuery()->selectFromModel($model);
+                if (!is_array($loadBy)) {
+                    $loadBy = [$loadBy[$source['id']] => $loadBy];
+                }
                 foreach ($loadBy as $key => $value) {
                     $query->where->field($key, $value);
                 }
@@ -143,8 +155,9 @@
             }
             if ($data) {
                 $model->set($data);
-                if ($cacheable) {
-                    $this->getCache()->set(md5('mysqli/model/'.$source['name'].'/'.$model->id()), $model, $source['cacheable']);
+                if ($cacheable && $model->exists()) {
+                    $this->getCache()
+                        ->set(self::getCacheKey($source['name'], $model->id), $model, $source['cacheable']);
                 }
             }
             return $model;
@@ -153,7 +166,7 @@
         /**
          * {@inheritDoc}
          */
-        public function save(\PHY\Model\Entity $model)
+        public function save(IEntity $model)
         {
             if ($model->exists()) {
                 return $this->update($model);
@@ -165,29 +178,28 @@
         /**
          * {@inheritDoc}
          */
-        public function update(\PHY\Model\Entity $model)
+        public function update(IEntity $model)
         {
-            self::createTable($model, $this->getDatabase(), $this->getCache());
+            $db = $this->getDatabase();
+            self::createTable($model, $db, $this->getCache());
             $data = $model->getChanged();
             $source = self::parseSource($model);
             $primary_id = $data[$source['id']];
             $query = $this->createQuery();
-            $query->transaction();
+            $db->transaction();
             try {
                 foreach ($source['tables'] as $alias => $table) {
-                    $query->update()
-                        ->find([$alias === 'primary'
-                                ? $primary_id
-                                : 'primary_id' => $primary_id])
-                        ->source($table)
-                        ->set($data)
-                        ->execute();
+                    $query->update()->find([
+                        $alias === 'primary'
+                            ? $primary_id
+                            : 'primary_id' => $primary_id
+                    ])->source($table)->set($data)->execute();
                 }
-                $query->commit();
-                $query->transaction(false);
-            } catch (\PHY\Database\Exception $exception) {
-                $query->rollback();
-                $query->transaction(false);
+                $db->commit();
+                $db->transaction(false);
+            } catch (Exception $exception) {
+                $db->rollback();
+                $db->transaction(false);
                 return false;
             }
             return true;
@@ -196,7 +208,7 @@
         /**
          * {@inheritDoc}
          */
-        public function insert(\PHY\Model\Entity $model)
+        public function insert(IEntity $model)
         {
             self::createTable($model, $this->getDatabase(), $this->getCache());
             $data = $model->toArray();
@@ -206,17 +218,14 @@
             $query->transaction();
             try {
                 foreach ($source['tables'] as $alias => $table) {
-                    $insertId = $query->insert()
-                        ->source($table)
-                        ->set($data)
-                        ->execute();
+                    $insertId = $query->insert()->source($table)->set($data)->execute();
                     if ($alias === 'primary') {
                         $newId = $insertId;
                     }
                 }
                 $query->commit();
                 $query->transaction(false);
-            } catch (\PHY\Database\Exception $exception) {
+            } catch (Exception $exception) {
                 $query->rollback();
                 $query->transaction(false);
                 return 0;
@@ -227,16 +236,18 @@
         /**
          * {@inheritDoc}
          */
-        public function delete(\PHY\Model\Entity $model)
+        public function delete(IEntity $model)
         {
             self::createTable($model, $this->getDatabase(), $this->getCache());
             $id = $model->id;
             $database = $this->getDatabase();
             $source = self::parseSource($model);
             foreach ($source['table'] as $alias => $table) {
-                $database->getCollection($table['table'])->find([$alias === 'primary'
+                $database->getCollection($table['table'])->find([
+                    $alias === 'primary'
                         ? $source['id']
-                        : 'primary_id' => $id]);
+                        : 'primary_id' => $id
+                ]);
             }
         }
 
@@ -245,7 +256,7 @@
          */
         public function createQuery()
         {
-            return new \PHY\Database\Mysqli\Query($this);
+            return new Query($this);
         }
 
         /**
@@ -253,13 +264,13 @@
          * information pertaining to it so we don't need to keep checking during
          * every run through of our app.
          *
-         * @param \PHY\Model\Entity $model
-         * @param \PHY\Database\Mysqli $database
-         * @param \PHY\Cache\ICache $cache
+         * @param IEntity $model
+         * @param IDatabase $database
+         * @param ICache $cache
          * @return boolean
-         * @throws \PHY\Database\Mysqli\Exception
+         * @throws \Exception
          */
-        private static function createTable(\PHY\Model\Entity $model, \PHY\Database\Mysqli $database, \PHY\Cache\ICache $cache)
+        private static function createTable(IEntity $model, IDatabase $database, ICache $cache)
         {
             if (self::$_tables === null) {
                 self::$_tables = $cache->get('mysqli/tables');
@@ -273,7 +284,7 @@
             foreach ($source['schema'] as $alias => $table) {
                 if (!array_key_exists($table['table'], self::$_tables) || !self::$_tables[$table['table']]) {
                     $databaseName = static::getDatabaseName($database);
-                    $check = $database->single("SHOW TABLES WHERE Tables_in_".$databaseName." = '".$table['table']."'");
+                    $check = $database->single("SHOW TABLES WHERE Tables_in_" . $databaseName . " = '" . $table['table'] . "'");
                     if (!$check) {
                         try {
                             $id = array_key_exists('id', $table)
@@ -285,7 +296,7 @@
                             $engine = array_key_exists('engine', $table)
                                 ? $table['engine']
                                 : 'InnoDatabase';
-                            $fields = [$id => '`'.$id.'` int(16) unsigned NOT NULL AUTO_INCREMENT'];
+                            $fields = [$id => '`' . $id . '` int(16) unsigned NOT NULL AUTO_INCREMENT'];
                             $keys = array_key_exists('keys', $table)
                                 ? $table['keys']
                                 : ['local' => [], 'foreign' => []];
@@ -296,18 +307,13 @@
                                 $keys['foreign'] = [];
                             }
                             if (!array_key_exists($id, $keys['local'])) {
-                                $keys['local'][$id] = 'PRIMARY KEY (`'.$id.'`)';
+                                $keys['local'][$id] = 'PRIMARY KEY (`' . $id . '`)';
                             }
                             foreach ($table['columns'] as $key => $type) {
-                                $fields[$key] = '`'.$key.'` '.self::getFieldType($type);
+                                $fields[$key] = '`' . $key . '` ' . self::getFieldType($type);
                             }
-                            $database->query(
-                                "CREATE TABLE IF NOT EXISTS `".$databaseName."`.`".$table['table']."` (".
-                                implode(",", $fields).",".
-                                implode(",", $keys['local'])."
-                                ) ENGINE=".$engine." DEFAULT CHARSET=".$charset.";".
-                                implode(";", $keys['foreign'])
-                            );
+                            $database->query("CREATE TABLE IF NOT EXISTS `" . $databaseName . "`.`" . $table['table'] . "` (" . implode(",", $fields) . "," . implode(",", $keys['local']) . "
+                                ) ENGINE=" . $engine . " DEFAULT CHARSET=" . $charset . ";" . implode(";", $keys['foreign']));
                             self::$_tables[$table['table']] = !$database->error;
                             if (self::$_tables[$table['table']] && array_key_exists('filler', $table) && $table['filler']) {
                                 $item = new static();
@@ -332,7 +338,7 @@
             $database->autocommit(true);
             if ($changed) {
                 $cache->delete('mysqli/tables');
-                $cache->set('mysqli/tables', self::$_tables, \PHY\Variable\Int::YEAR);
+                $cache->set('mysqli/tables', self::$_tables, Int::YEAR);
             }
             return true;
         }
@@ -340,15 +346,15 @@
         /**
          * Parse the source of our entity to a uniformed array for our various
          * Mysqli needs.
-         * 
-         * @param \PHY\Model\Entity $model
+         *
+         * @param IEntity $model
          * @return array
          */
-        private static function parseSource(\PHY\Model\Entity $model)
+        private static function parseSource(IEntity $model)
         {
             $source = $model->getSource();
             if (!array_key_exists('cacheable', $source)) {
-                $source['cacheable'] = 0;
+                $source['cacheable'] = false;
             }
             if (!array_key_exists('id', $source)) {
                 if (array_key_exists('id', $source['schema']['primary'])) {
@@ -363,23 +369,23 @@
 
         /**
          * Generate a unified cache key.
-         * 
+         *
          * @param string $name
-         * @param scalar $id
+         * @param mixed $id
          * @return string
          */
         private static function getCacheKey($name, $id)
         {
-            return md5('mysqli/model/'.$name.'/'.$id);
+            return md5('mysqli/model/' . $name . '/' . $id);
         }
 
         /**
          * Grab our database's name
-         * 
-         * @param \PHY\Database\Mysqli $database
+         *
+         * @param IDatabase $database
          * @return string
          */
-        private static function getDatabaseName(\PHY\Database\Mysqli $database)
+        private static function getDatabaseName(IDatabase $database)
         {
             $table = md5($database->host_info);
             if (!array_key_exists($table, static::$_databases)) {
@@ -416,7 +422,7 @@
         private static function getFieldType($type)
         {
             if (is_array($type)) {
-                return "ENUM('".join("','", $type)."') NOT NULL";
+                return "ENUM('" . join("','", $type) . "') NOT NULL";
             } else {
                 return array_key_exists($type, static::$_fieldTypes)
                     ? static::$_fieldTypes[$type]
@@ -433,4 +439,3 @@
         }
 
     }
-

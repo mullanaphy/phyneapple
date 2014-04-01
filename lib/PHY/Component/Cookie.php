@@ -26,7 +26,7 @@
      * @license http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
      * @author John Mullanaphy <john@jo.mu>
      */
-    class Cookie extends \PHY\Component\AComponent
+    class Cookie extends AComponent
     {
 
         /**
@@ -69,8 +69,10 @@
         {
             if (headers_sent()) {
                 throw new Exception('Cannot declare a cookie after headers have been sent.');
-            } else if (!is_string($key)) {
-                throw new Exception('A cookie key must be a string.');
+            } else {
+                if (!is_string($key)) {
+                    throw new Exception('A cookie key must be a string.');
+                }
             }
             $_COOKIE['PHY_'.$key] = $value;
             return true;

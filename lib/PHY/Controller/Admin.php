@@ -17,6 +17,10 @@
 
     namespace PHY\Controller;
 
+    use PHY\App;
+    use PHY\Model\Authorize;
+    use PHY\Model\User;
+
     /**
      * Default admin panel. Gives a flavor on how to use Phyneapple based controllers.
      *
@@ -26,28 +30,30 @@
      * @license http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
      * @author John Mullanaphy <john@jo.mu>
      */
-    class Admin extends \PHY\Controller\AController
+    class Admin extends AController
     {
 
         /**
          * {@inheritDoc}
          */
-        public function __construct(\PHY\App $app = null)
+        public function __construct(App $app = null)
         {
             parent::__construct($app);
-            $User = $app->getUser();
-            if (!$User->exists()) {
+            /* @var \PHY\Model\IUser $user */
+            $user = $app->getUser();
+            if (!$user->exists()) {
                 $this->redirect('/login');
             } else {
-                $Authorize = $app->get('model/authorize')->loadByRequest('controller/admin');
-                if (!$Authorize->exists()) {
-                    $Authorize->request = 'controller/admin';
-                    $Authorize->allow = 'admin super-admin';
-                    $Authorize->deny = 'all';
-                    $Authorize->save();
+                /* @var \PHY\Database\IManager $manager */
+                $manager = $app->get('database')->getManager();
+                $authorize = Authorize::loadByRequest('controller/admin', $manager);
+                if (!$authorize->exists()) {
+                    $authorize->request = 'controller/admin';
+                    $authorize->allow = 'admin super-admin';
+                    $authorize->deny = 'all';
+                    $manager->save($authorize);
                 }
-                $Authorize->setUser($User);
-                if (!$Authorize->isAllowed()) {
+                if (!$authorize->isAllowed($user)) {
                     $this->redirect('/edgage');
                 }
             }
@@ -71,7 +77,7 @@
             $id = $request->get('id', false);
             $layout = $this->getLayout();
             if ($id !== false) {
-                $Authorize = $app->get('model/authorize')->load($id);
+                $authorize = $app->get('model/authorize')->load($id);
                 $config = $layout->config('admin/authorize/item');
                 $layout->setConfig($config);
                 $content = $layout->addVariables('content', ['Authorize' => $Authorize]);
@@ -104,7 +110,10 @@
             }
             if ($message = $app->get('session/admin/authorize/message')) {
                 $app->delete('session/admin/authorize/message');
-                $layout->addVariables('message', ['template' => 'admin/authorize/message.phtml', 'message' => $message]);
+                $layout->addVariables('message', [
+                    'template' => 'admin/authorize/message.phtml',
+                    'message' => $message
+                ]);
             }
         }
 
@@ -116,13 +125,14 @@
             $request = $this->getRequest();
             $id = (int)$request->get('id', 0);
             if ($id) {
-                $Authorize = \PHY\Model\Authorize::load($id);
+                $Authorize = Authorize::load($id);
                 if (!$Authorize->exists() || $Authorize->deleted) {
-                    $this->getApp()->set('session/admin/authorize/message', 'Sorry, but you cannot edit that privilege.');
+                    $this->getApp()
+                        ->set('session/admin/authorize/message', 'Sorry, but you cannot edit that privilege.');
                     $this->redirect('/admin/authorize');
                 }
             } else {
-                $Authorize = new \PHY\Model\Authorize;
+                $Authorize = new Authorize;
             }
             if (!$Authorize->exists()) {
                 $Authorize->request = $request->get('request');
@@ -134,7 +144,7 @@
             $Authorize->allow = $allow;
             $Authorize->deny = $deny;
             $Authorize->save();
-            $this->redirect('/admin/authorize/id/'.$Authorize->id);
+            $this->redirect('/admin/authorize/id/' . $Authorize->id);
         }
 
         /**
@@ -142,13 +152,13 @@
          */
         public function authorize_put()
         {
-            $User = new \PHY\Model\User;
-            foreach ($this->getRequest()->parameters as $key => $value) {
+            $User = new User;
+            foreach ($this->getRequest()->getParameters() as $key => $value) {
                 $User->set($key, $value);
             }
             $save = $User->save();
             $this->getApp()->set('session/admin/user/message', 'User has been created.');
-            $this->redirect('/admin/user/id/'.$save['response']);
+            $this->redirect('/admin/user/id/' . $save['response']);
         }
 
         /**
@@ -160,7 +170,7 @@
             $layout = $this->getLayout();
             $id = $request->get('id', false);
             if ($id !== false) {
-                $User = \PHY\Model\User::load($id);
+                $User = User::load($id, $this->getApp()->get('database'));
                 $config = $this->getLayout()->config('admin/user/item');
                 $layout->setConfig($config);
                 $layout->addVariables('content', ['User' => $User]);
@@ -215,7 +225,7 @@
             } else {
                 $User = new \PHY\Model\User;
             }
-            foreach ($request->parameters() as $key => $value) {
+            foreach ($request->getParameters() as $key => $value) {
                 if ($key === 'password' && !$value) {
                     continue;
                 }
@@ -223,7 +233,7 @@
             }
             $User->save();
             $this->getApp()->set('session/admin/user/message', 'User has been updated.');
-            $this->redirect('/admin/user/id/'.$User->id);
+            $this->redirect('/admin/user/id/' . $User->id);
         }
 
         /**
@@ -232,12 +242,12 @@
         public function user_put()
         {
             $User = new \PHY\Model\User;
-            foreach ($this->getRequest()->parameters as $key => $value) {
+            foreach ($this->getRequest()->getParameters() as $key => $value) {
                 $User->set($key, $value);
             }
             $save = $User->save();
             $this->getApp()->set('session/admin/user/message', 'User has been created.');
-            $this->redirect('/admin/user/id/'.$save['response']);
+            $this->redirect('/admin/user/id/' . $save['response']);
         }
 
     }

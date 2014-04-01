@@ -47,7 +47,6 @@
          * Delete an entry
          *
          * @param string $node
-         * @param int $time When to delete this node.
          * @return bool
          */
         public function delete($node);
@@ -86,7 +85,7 @@
          * @param int $expiration
          * @return bool
          */
-        public function replace($node, $value = false, $expiration = 0, $flag = 0);
+        public function replace($node, $value, $expiration = 0, $flag = 0);
 
         /**
          * Store a new key into the memory table.
@@ -97,5 +96,5 @@
          * @param int $expiration
          * @return bool
          */
-        public function set($node, $value = false, $expiration = 0, $flag = 0);
+        public function set($node, $value, $expiration = 0, $flag = 0);
     }

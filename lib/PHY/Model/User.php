@@ -17,6 +17,9 @@
 
     namespace PHY\Model;
 
+    use PHY\Encoder\IEncoder;
+    use PHY\Encoder\PHPass;
+
     /**
      * The oh so generic user model.
      *
@@ -26,7 +29,7 @@
      * @license http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
      * @author John Mullanaphy <john@jo.mu>
      */
-    class User extends \PHY\Model\Entity
+    class User extends Entity implements IUser
     {
 
         protected $_password = '';
@@ -55,58 +58,7 @@
         ];
 
         /**
-         * On serialize, let's unset our user's password so it isn't written to
-         * disk. That would be bad.
-         */
-        public function __sleep()
-        {
-            $this->data['password'] = null;
-            parent::__sleep();
-        }
-
-        /**
-         * Now that we're unserializing, let's regrab the hashed password for
-         * checking purposes.
-         */
-        public function __wakeup()
-        {
-            parent::__wakeup();
-            $this->data['password'] = $this->getDatabase()
-                    ->select('password')
-                    ->find([static::getPrimaryKey(static::$_source) => $this->id()])
-                    ->get()['password'];
-        }
-
-        /**
-         * Log a User in.
-         *
-         * @param string $name
-         * @param string $password
-         * @return \PHY\Model\User
-         */
-        public function login($name = null, $password = null)
-        {
-            $collection = $this->getCollection();
-            $collection->filter([
-                'or' => [
-                    'username' => $name,
-                    'email' => $name
-                ]
-            ]);
-            $data = $collection->getFirstItem();
-            if ($data) {
-                $this->set($data);
-            }
-            return $this;
-        }
-
-        /**
-         * Check to see if a password matches what it should.
-         *
-         * @param string $password
-         * @param string $checkPassword
-         * @return boolean
-         * @throws Exception
+         * {@inheritDoc}
          */
         public function checkPassword($password = '', $checkPassword = null)
         {
@@ -131,29 +83,30 @@
                 $encoder = $this->getEncoder();
                 $this->data['password'] = $encoder->hashPassword($this->_password);
             }
-            $return = parent::save();
             $this->_password = '';
-            return $return;
         }
 
         /**
-         * If key is set you'll get the value back. Otherwise NULL.
-         *
-         * @param string $key
-         * @return mixed
+         * {@inheritDoc}
          */
         public function get($key = '')
         {
             if ($key === 'password') {
-                return;
-            } elseif (array_key_exists($key, $this->data)) {
-                return $this->data[$key];
-            } elseif (array_key_exists($key, $this->_additional)) {
-                return $this->_additional[$key];
+                return null;
             } else {
-                $attributes = $this->getAttributes();
-                if (array_key_exists($key, $attributes)) {
-                    return $attributes[$key];
+                if (array_key_exists($key, $this->data)) {
+                    return $this->data[$key];
+                } else {
+                    if (array_key_exists($key, $this->_additional)) {
+                        return $this->_additional[$key];
+                    } else {
+                        $attributes = $this->getAttributes();
+                        if (array_key_exists($key, $attributes)) {
+                            return $attributes[$key];
+                        } else {
+                            return null;
+                        }
+                    }
                 }
             }
         }
@@ -163,7 +116,7 @@
          *
          * @param string $key
          * @param mixed $value
-         * @return \PHY\Model\User
+         * @return $this
          */
         public function set($key = '', $value = '')
         {
@@ -179,10 +132,10 @@
         /**
          * Set our password encoder.
          *
-         * @param \PHY\Encoder\IEncoder $encoder
-         * @return \PHY\Model\User
+         * @param IEncoder $encoder
+         * @return $this
          */
-        public function setEncoder(\PHY\Encoder\IEncoder $encoder)
+        public function setEncoder(IEncoder $encoder)
         {
             $this->setResource('encoder', $encoder);
             return $this;
@@ -191,12 +144,12 @@
         /**
          * Grab our password encoder.
          *
-         * @return \PHY\Encoder\IEncoder
+         * @return IEncoder
          */
         public function getEncoder()
         {
             if (!$this->hasResource('encoder')) {
-                $this->setResource('encoder', new \PHY\Encoder\PHPass);
+                $this->setResource('encoder', new PHPass);
             }
             return $this->getResource('encoder');
         }

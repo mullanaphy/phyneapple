@@ -27,24 +27,21 @@
      * @author John Mullanaphy <john@jo.mu>
      * @todo Rewrite this class, probably break it out some.
      */
-    class Debugger
+    class Debugger implements IDebugger
     {
 
         private $time = null;
         private $memory = 0;
 
         /**
-         * Profile.
-         *
-         * @staticvar string $time
-         * @staticvar string $memory
-         * @param bool $reset Resets the timer.
+         * {@inheritDoc}
          */
         public function profile($reset = false)
         {
             if ($this->time === null || $reset) {
                 $this->time = microtime(true);
                 $this->memory = memory_get_usage();
+                return 'Started at '.$this->time.' using '.self::parseBytes(memory_get_usage());
             } else {
                 return (string)(round(microtime(true) - $this->time, 5)).' using '.self::parseBytes(memory_get_usage() - $this->memory).' of '.self::parseBytes(memory_get_usage());
             }
@@ -68,7 +65,7 @@
             }
             $size = abs($size);
             $units = array('b', 'kb', 'mb', 'gb', 'tb', 'pb');
-            return ($sign * (round($size / pow(1024, ($i = floor(log($size, 1024)))), 2))).' '.$units[$i];
+            return ($sign * (round($size / pow(1024, ($i = (int)floor(log($size, 1024)))), 2))).' '.$units[$i];
         }
 
     }

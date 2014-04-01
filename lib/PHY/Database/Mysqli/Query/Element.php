@@ -17,6 +17,10 @@
 
     namespace PHY\Database\Mysqli\Query;
 
+    use PHY\Database\Query\IElement;
+    use PHY\Database\IManager;
+    use PHY\Model\IEntity;
+
     /**
      * Abstract class for all Mysqli Query elements.
      *
@@ -26,7 +30,7 @@
      * @license http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
      * @author John Mullanaphy <john@jo.mu>
      */
-    abstract class Element implements \PHY\Database\Query\IElement
+    abstract class Element implements IElement
     {
 
         private $manager = null;
@@ -41,9 +45,14 @@
         }
 
         /**
+         * @return string
+         */
+        public abstract function toString();
+
+        /**
          * {@inheritDoc}
          */
-        public function setManager(\PHY\Database\IManager $manager)
+        public function setManager(IManager $manager)
         {
             $this->manager = $manager;
             return $this;
@@ -63,7 +72,7 @@
         /**
          * {@inheritDoc}
          */
-        public function setModel(\PHY\Model\Entity $model)
+        public function setModel(IEntity $model)
         {
             $this->model = $model;
             return $this;
@@ -100,9 +109,8 @@
                 default:
                     return is_numeric($scalar)
                         ? (int)$scalar
-                        : $quotes.$this->getManager()->clean($scalar).$quotes;
+                        : $quotes . $this->getManager()->clean($scalar) . $quotes;
             }
         }
 
     }
-

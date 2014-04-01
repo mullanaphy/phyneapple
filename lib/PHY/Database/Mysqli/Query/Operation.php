@@ -17,6 +17,10 @@
 
     namespace PHY\Database\Mysqli\Query;
 
+    use PHY\TResources;
+    use PHY\Model\IEntity;
+    use PHY\Database\IManager;
+
     /**
      * Abstract class for all Mysqli Query operations.
      *
@@ -29,7 +33,7 @@
     abstract class Operation
     {
 
-        use \PHY\TResources;
+        use TResources;
 
         /**
          * {@inheritDoc}
@@ -40,12 +44,17 @@
         }
 
         /**
-         * Set a manager to use with our objects.
-         * 
-         * @param \PHY\Database\IManager $manager
-         * @return \PHY\Database\Mysqli\Query\Operation
+         * @return string
          */
-        public function setManager(\PHY\Database\IManager $manager)
+        public abstract function toString();
+
+        /**
+         * Set a manager to use with our objects.
+         *
+         * @param IManager $manager
+         * @return $this
+         */
+        public function setManager(IManager $manager)
         {
             $this->setResource('manager', $manager);
             return $this;
@@ -54,7 +63,8 @@
         /**
          * Return our manager, if none is set, then throw an exception.
          *
-         * @return \PHY\Database\IManager
+         * @return IManager
+         * @throws Exception
          */
         public function getManager()
         {
@@ -67,10 +77,10 @@
         /**
          * Set a model to use with our operation.
          *
-         * @param \PHY\Model\Entity $model
-         * @return \PHY\Database\Mysqli\Query\Operation
+         * @param IEntity $model
+         * @return $this
          */
-        public function setModel(\PHY\Model\Entity $model)
+        public function setModel(IEntity $model)
         {
             $this->setResource('model', $model);
             return $this;
@@ -79,13 +89,13 @@
         /**
          * Get the defined model for our operation.
          *
-         * @return \PHY\Model\Entity
-         * @throws \PHY\Database\Mysqli\Operation\Exception
+         * @return IEntity
+         * @throws Exception
          */
         public function getModel()
         {
             if (!$this->hasResource('model')) {
-                throw new \PHY\Database\Mysqli\Operation\Exception('No model has been set for this operation.');
+                throw new Exception('No model has been set for this operation.');
             }
             return $this->getResource('model');
         }

@@ -26,7 +26,7 @@
      * @license http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
      * @author John Mullanaphy <john@jo.mu>
      */
-    class Item
+    class Item implements IItem
     {
 
         protected $name = 'event';
@@ -37,10 +37,7 @@
         protected $triggered = 0;
 
         /**
-         * Inject our event's name and the values to pass along.
-         *
-         * @param string $name
-         * @param array $values
+         * {@inheritDoc}
          */
         public function __construct($name = 'event', array $values = [])
         {
@@ -51,21 +48,20 @@
         /**
          * Get a defined value.
          *
-         * @param scalar $key
+         * @param string $key
          * @return mixed
          */
         public function __get($key)
         {
             if (array_key_exists($key, $this->values)) {
                 return $this->values[$key];
+            } else {
+                return null;
             }
         }
 
         /**
-         * Set our event's name.
-         *
-         * @param string $name
-         * @return \PHY\Event\Item
+         * {@inheritDoc}
          */
         public function setName($name = 'event')
         {
@@ -74,9 +70,7 @@
         }
 
         /**
-         * Get our event's name.
-         *
-         * @return string
+         * {@inheritDoc}
          */
         public function getName()
         {
@@ -84,10 +78,7 @@
         }
 
         /**
-         * Set values.
-         *
-         * @param array $values
-         * @return \PHY\Event\Item
+         * {@inheritDoc}
          */
         public function setValues(array $values = [])
         {
@@ -96,9 +87,7 @@
         }
 
         /**
-         * Get our event's values.
-         *
-         * @return array
+         * {@inheritDoc}
          */
         public function getValues()
         {
@@ -106,21 +95,16 @@
         }
 
         /**
-         * Set our dispatcher.
-         *
-         * @param \PHY\Event\Dispatcher $dispatcher
-         * @return \PHY\Event\Item
+         * {@inheritDoc}
          */
-        public function setDispatcher(\PHY\Event\Dispatcher $dispatcher)
+        public function setDispatcher(IDispatcher $dispatcher)
         {
             $this->dispatcher = $dispatcher;
             return $this;
         }
 
         /**
-         * Get our assigned dispatcher.
-         *
-         * @return \PHY\Event\Dispatcher
+         * {@inheritDoc}
          */
         public function getDispatcher()
         {
@@ -128,10 +112,7 @@
         }
 
         /**
-         * Set our event's time.
-         *
-         * @param int $time
-         * @return \PHY\Event\Item
+         * {@inheritDoc}
          */
         public function setTime($time = 0)
         {
@@ -140,9 +121,7 @@
         }
 
         /**
-         * Get our event's time.
-         *
-         * @return int
+         * {@inheritDoc}
          */
         public function getTime()
         {
@@ -150,9 +129,7 @@
         }
 
         /**
-         * Increase our triggered events counter.
-         *
-         * @return \PHY\Event\Item
+         * {@inheritDoc}
          */
         public function trigger()
         {
@@ -161,9 +138,7 @@
         }
 
         /**
-         * Get our triggered events.
-         *
-         * @return int
+         * {@inheritDoc}
          */
         public function getTriggered()
         {
@@ -171,10 +146,7 @@
         }
 
         /**
-         * Set our child events.
-         *
-         * @param int $children
-         * @return \PHY\Event\Item
+         * {@inheritDoc}
          */
         public function setChildren($children = 0)
         {
@@ -183,9 +155,7 @@
         }
 
         /**
-         * Get our child events.
-         *
-         * @return int
+         * {@inheritDoc}
          */
         public function getChildren()
         {

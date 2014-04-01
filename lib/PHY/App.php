@@ -17,6 +17,14 @@
 
     namespace PHY;
 
+    use PHY\Component\IComponent;
+    use PHY\Component\Registry;
+    use PHY\Http\Exception as HttpException;
+    use PHY\Http\IRequest;
+    use PHY\Http\Response;
+    use PHY\Model\IUser;
+    use PHY\View\Layout;
+
     /**
      * Core APP class. This holds all global states and pieces everything
      * together.
@@ -36,6 +44,9 @@
         private $environment = 'development';
         private $path = null;
         private $debugger = null;
+        private $rootDirectory = '';
+        private $publicDirectory = '';
+        private $user = null;
 
         /**
          * Return a value from the Registry if it exists.
@@ -47,10 +58,12 @@
         {
             if ($component = $this->parseComponent($key)) {
                 return $component[0]->get($component[1]);
-            } else if ($this->hasComponent($key)) {
-                return $this->getComponent($key);
             } else {
-                return $this->getRegistry()->get($key);
+                if ($this->hasComponent($key)) {
+                    return $this->getComponent($key);
+                } else {
+                    return $this->getRegistry()->get($key);
+                }
             }
         }
 
@@ -60,18 +73,19 @@
          *
          * @param string $key
          * @param mixed $value
-         * @param bool $graceful
          * @return mixed
-         * @throws \PHY\Exception
+         * @throws Exception
          */
-        public function set($key = null, $value = null)
+        public function set($key, $value)
         {
             if (!is_string($key)) {
                 throw new Exception('A registry key must be a string.');
-            } else if ($component = $this->parseComponent($key)) {
-                return $component[0]->set($component[1], $value);
             } else {
-                return $this->getRegistry()->set($key, $value);
+                if ($component = $this->parseComponent($key)) {
+                    return $component[0]->set($component[1], $value);
+                } else {
+                    return $this->getRegistry()->set($key, $value);
+                }
             }
         }
 
@@ -109,11 +123,11 @@
 
         /**
          * Set our registry class to use for our App.
-         * 
-         * @param \PHY\Component\IComponent $registry
-         * @return \PHY\App
+         *
+         * @param IComponent $registry
+         * @return $this
          */
-        public function setRegistry(\PHY\Component\IComponent $registry)
+        public function setRegistry(IComponent $registry)
         {
             $this->addComponent($registry);
             return $this;
@@ -122,12 +136,12 @@
         /**
          * Grab our Registry. If one hasn't been defined, we'll start a new one.
          *
-         * @return \PHY\Component\Registry
+         * @return IComponent
          */
         public function getRegistry()
         {
             if (!array_key_exists('registry', $this->components)) {
-                $this->addComponent(new \PHY\Component\Registry);
+                $this->addComponent(new Registry);
             }
             return $this->components['registry'];
         }
@@ -135,8 +149,8 @@
         /**
          * Set our Path class to use in our App.
          *
-         * @param \PHY\Path $path
-         * @return \PHY\APP
+         * @param Path $path
+         * @return $this
          */
         public function setPath(Path $path)
         {
@@ -147,7 +161,7 @@
         /**
          * Return our global Path.
          *
-         * @return \PHY\Path
+         * @return Path
          */
         public function getPath()
         {
@@ -160,9 +174,9 @@
         /**
          * Set  our global Debugger.
          *
-         * @param \PHY\Debugger $debugger
+         * @param IDebugger $debugger
          */
-        public function setDebugger(Debugger $debugger)
+        public function setDebugger(IDebugger $debugger)
         {
             $this->debugger = $debugger;
         }
@@ -170,7 +184,7 @@
         /**
          * Grab our global Debugger class.
          *
-         * @return \PHY\Debugger
+         * @return IDebugger
          */
         public function getDebugger()
         {
@@ -207,10 +221,10 @@
         /**
          * Set whether we're a development app or in production.
          *
-         * @param string $development
-         * @return \PHY\App
+         * @param string $environment
+         * @return $this
          */
-        public function setEnvironment($environment = false)
+        public function setEnvironment($environment)
         {
             $this->environment = $environment;
             return $this;
@@ -223,7 +237,7 @@
          */
         public function isDevelopment()
         {
-            return $this->getApp('config/'.$this->environment.'/development');
+            return $this->get('config/' . $this->environment . '/development');
         }
 
         /**
@@ -231,7 +245,7 @@
          * config files.
          *
          * @param string $component
-         * @return \PHY\Registry\Component or (bool)false if Component isn't found
+         * @return IComponent or (bool)false if Component isn't found
          */
         private function parseComponent($component)
         {
@@ -245,7 +259,7 @@
             if ($this->hasComponent($component)) {
                 return [$this->getComponent($component), $key];
             } else {
-                $className = '\PHY\Component\\'.$component;
+                $className = '\PHY\Component\\' . $component;
                 if (class_exists($className)) {
                     $this->addComponent(new $className);
                     return [$this->getComponent($component), $key];
@@ -255,10 +269,10 @@
         }
 
         /**
-         * Get a compontent if it exists.
-         * 
-         * @param string $component
-         * @return \PHY\Component\IComponent|false
+         * Get a component if it exists.
+         *
+         * @param string $key
+         * @return IComponent|bool
          */
         public function getComponent($key)
         {
@@ -271,8 +285,8 @@
         /**
          * See if a component exists.
          *
-         * @param string $component
-         * @return boolean
+         * @param string $key
+         * @return bool
          */
         public function hasComponent($key)
         {
@@ -282,11 +296,10 @@
         /**
          * Add a component to our App.
          *
-         * @param string $key
-         * @param \PHY\Component\IComponent $component
-         * @return \PHY\App
+         * @param IComponent $component
+         * @return $this
          */
-        public function addComponent(\PHY\Component\IComponent $component)
+        public function addComponent(IComponent $component)
         {
             $component->setApp($this);
             $this->components[$component->getName()] = $component;
@@ -295,10 +308,11 @@
 
         /**
          * Set our user.
-         * 
-         * @param \PHY\Model\User $user
+         *
+         * @param IUser $user
+         * @return $this
          */
-        public function setUser(\PHY\Model\User $user)
+        public function setUser(IUser $user)
         {
             $this->user = $user;
             return $this;
@@ -306,8 +320,8 @@
 
         /**
          * Get our logged in user.
-         * 
-         * @return \PHY\Model\User
+         *
+         * @return IUser
          */
         public function getUser()
         {
@@ -320,13 +334,14 @@
         /**
          * Render our app.
          *
-         * @param \PHY\Request $request
-         * @return 
+         * @param IRequest $request
+         * @return null
+         * @throws Exception
          */
-        public function render(\PHY\Request $request)
+        public function render(IRequest $request)
         {
 
-            $file = dirname(str_replace($_SERVER['DOCUMENT_ROOT'], '', __FILE__));
+            $file = dirname(str_replace($this->getRootDirectory(), '', __FILE__));
             if ($file === '/') {
                 $file = '';
             }
@@ -334,11 +349,12 @@
             /* Look for a rewrite rule */
             try {
                 $manager = $this->get('database/default.manager');
+                /* @var \PHY\Model\Rewrite $rewrite */
                 $rewrite = $manager->getModel('rewrite');
                 $manager->load($rewrite::loadByRequest($request), $rewrite);
                 if ($rewrite->exists()) {
                     if ($rewrite->isRedirect()) {
-                        $response = new \PHY\Response;
+                        $response = new Response($request->getEnvironmentals(), $this->get('config/status_code'));
                         $response->redirect($rewrite->destination, $rewrite->redirect);
                         $response->renderHeaders();
                         exit;
@@ -347,8 +363,7 @@
                     }
                 }
 
-                $path = $request->getUri();
-
+                $path = $request->getUrl();
                 $pathParameters = explode('/', strtolower(trim($path, '/')));
                 if (count($pathParameters) >= 2) {
                     $controllerClass = array_shift($pathParameters);
@@ -361,36 +376,40 @@
                         $i = 1;
                         foreach ($pathParameters as $key) {
                             $parameters[$i === 0
-                                    ? $i = 1
-                                    : $i = 0][] = $key;
+                                ? $i = 1
+                                : $i = 0][] = $key;
                         }
                         if (count($parameters[1]) !== count($parameters[0])) {
                             $parameters[1][] = null;
                         }
-                        $request->add(array_combine($parameters[0], $parameters[1]));
+                        $request->addParameters(array_combine($parameters[0], $parameters[1]));
                     }
-                } else if (count($pathParameters)) {
-                    $controllerClass = current($pathParameters);
-                    if (!$controllerClass) {
-                        $controllerClass = 'index';
-                    }
-                    $method = 'index';
                 } else {
-                    $controllerClass = 'index';
-                    $method = 'index';
+                    if (count($pathParameters)) {
+                        $controllerClass = current($pathParameters);
+                        if (!$controllerClass) {
+                            $controllerClass = 'index';
+                        }
+                        $method = 'index';
+                    } else {
+                        $controllerClass = 'index';
+                        $method = 'index';
+                    }
                 }
 
-                if (class_exists('\PHY\Controller\\'.$controllerClass)) {
-                    $_ = '\PHY\Controller\\'.$controllerClass;
+                if (class_exists('\PHY\Controller\\' . $controllerClass)) {
+                    $_ = '\PHY\Controller\\' . $controllerClass;
                     $controller = new $_($this);
                 } else {
-                    $controller = new Controller\Index($this);
+                    $controller = new Controller\Error($this);
+                    $controller->setStatusCode(404);
+                    $controller->setMessage('Seems I couldn\'t find yout requests controller "' . $controllerClass . '". Blame the programmer, he\she almost definitely did it. Even if you put in the wrong url, just blame them. They\'re used to it!');
                 }
                 $controller->setRequest($request);
 
-                $layout = new \PHY\View\Layout;
+                $layout = new Layout;
                 $layout->setController($controller);
-                $layout->loadBlocks('default', $controllerClass.'/'.$method);
+                $layout->loadBlocks('default', $controllerClass . '/' . $method);
                 $controller->setLayout($layout);
 
                 $controller->action($method);
@@ -399,12 +418,12 @@
                 $controller = new Controller\Error($this);
                 try {
                     throw $exception;
-                } catch (\PHY\Database\Exception $exception) {
+                } catch (Database\Exception $exception) {
                     $controller->setMessage('Sorry, yet there was an issue trying to connect to our database. Please try again in a bit');
-                } catch (\PHY\Exception $exception) {
-                    $controller->setMessage('Sorry, but something happened Phyneapple related. Could have been us or our framework. Looking in to it...');
-                } catch (\PHY\Exception\HTTP $exception) {
+                } catch (HttpException $exception) {
                     $controller->httpException($exception);
+                } catch (Exception $exception) {
+                    $controller->setMessage('Sorry, but something happened Phyneapple related. Could have been us or our framework. Looking in to it...');
                 } catch (\Exception $exception) {
                     $controller->setMessage('Seems there was general error. We are checking it out.');
                 }
@@ -418,5 +437,46 @@
             }
         }
 
-    }
+        /**
+         * Set our root directory.
+         *
+         * @param string $dir
+         * @return $this
+         */
+        public function setRootDirectory($dir)
+        {
+            $this->rootDirectory = $dir;
+            return $this;
+        }
 
+        /**
+         *
+         * @return type
+         */
+        public function getRootDirectory()
+        {
+            return $this->rootDirectory;
+        }
+
+        /**
+         * Set our root directory.
+         *
+         * @param string $dir
+         * @return $this
+         */
+        public function setPublicDirectory($dir)
+        {
+            $this->publicDirectory = $dir;
+            return $this;
+        }
+
+        /**
+         *
+         * @return string
+         */
+        public function getPublicDirectory()
+        {
+            return $this->publicDirectory;
+        }
+
+    }

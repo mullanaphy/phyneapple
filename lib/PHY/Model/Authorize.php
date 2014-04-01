@@ -17,6 +17,8 @@
 
     namespace PHY\Model;
 
+    use PHY\Database\IManager;
+
     /**
      * For ACL Authorization.
      *
@@ -26,7 +28,7 @@
      * @license http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
      * @author John Mullanaphy <john@jo.mu>
      */
-    class Authorize extends \PHY\Model\Entity
+    class Authorize extends Entity
     {
 
         protected static $_source = [
@@ -54,9 +56,10 @@
         /**
          * See if a Request is allowed to be made.
          *
-         * @return boolean
+         * @param IUser $user
+         * @return bool
          */
-        public function isAllowed(\PHY\Model\user $user)
+        public function isAllowed(IUser $user)
         {
             $allow = explode(' ', $this->data['allow']);
             $deny = explode(' ', $this->data['deny']);
@@ -69,46 +72,28 @@
                 /* If it's root it has full access */
                 if ($user->group === 'root') {
                     $allowed = true;
-                }
-
-                /* See if a user's ID is in the approved list and not in the denied list. */ elseif (in_array($user->id, $allow) && !in_array($user->id, $deny)) {
+                } /* See if a user's ID is in the approved list and not in the denied list. */ elseif (in_array($user->id, $allow) && !in_array($user->id, $deny)) {
                     $allowed = true;
-                }
-
-                /* If not, see if he's in the denied list only. */ elseif (in_array($user->id, $deny)) {
+                } /* If not, see if he's in the denied list only. */ elseif (in_array($user->id, $deny)) {
                     $allowed = false;
-                }
-
-                /* If not, let's see if his group is in the allowed list and it's not in the denied list. */ elseif (in_array($user->group, $allow) && !in_array($user->group, $deny)) {
+                } /* If not, let's see if his group is in the allowed list and it's not in the denied list. */ elseif (in_array($user->group, $allow) && !in_array($user->group, $deny)) {
                     $allowed = true;
-                }
-
-                /* If not, let's see if his group is in the denied list. */ elseif (in_array($user->group, $deny)) {
+                } /* If not, let's see if his group is in the denied list. */ elseif (in_array($user->group, $deny)) {
                     $allowed = false;
-                }
-
-                /* If not, well let's see if everyone is allowed access and not in the denied list. */ elseif (in_array('all', $allow) && !in_array('all', $deny)) {
+                } /* If not, well let's see if everyone is allowed access and not in the denied list. */ elseif (in_array('all', $allow) && !in_array('all', $deny)) {
                     $allowed = true;
-                }
-
-                /* If not, we can see if everyone is denied. */ elseif (in_array('all', $deny)) {
+                } /* If not, we can see if everyone is denied. */ elseif (in_array('all', $deny)) {
                     $allowed = false;
-                }
-
-                /* Finally, if there isn't an explicit DENY all then they should have access. */ else {
+                } /* Finally, if there isn't an explicit DENY all then they should have access. */ else {
                     $allowed = true;
                 }
             } else {
                 /* There's no logged in user, let's see if everyone is allowed access and not in the denied list. */
                 if (in_array('all', $allow) && !in_array('all', $deny)) {
                     $allowed = true;
-                }
-
-                /* If not, we can see if everyone is denied. */ elseif (in_array('all', $deny)) {
+                } /* If not, we can see if everyone is denied. */ elseif (in_array('all', $deny)) {
                     $allowed = false;
-                }
-
-                /* Finally, if there isn't an explicit DENY all then they should have access. */ else {
+                } /* Finally, if there isn't an explicit DENY all then they should have access. */ else {
                     $allowed = true;
                 }
             }
@@ -118,32 +103,57 @@
         /**
          * See if a user is denied to do set action.
          *
+         * @param IUser $user
          * @return bool
          */
-        public function isDenied()
+        public function isDenied(IUser $user)
         {
-            return !$this->isAllowed();
+            return !$this->isAllowed($user);
         }
 
         /**
-         * Save changes to the database.
+         * Add some spaces on the ends pre save.
          *
          * @return array Response array.
          */
-        public function save()
+        public function preSave()
         {
-            if (!$this->isDifferent()) {
-                return [
-                    'status' => 200,
-                    'response' => 'Nothing is different.'
-                ];
-            }
-            $this->set('allow', ' '.$this->get('allow').' ');
-            $this->set('deny', ' '.$this->get('deny').' ');
-            $save = parent::save();
-            $this->set('allow', trim($this->get('allow')));
-            $this->set('deny', trim($this->get('deny')));
-            return $save;
+            $this->set('allow', ' ' . $this->get('allow') . ' ');
+            $this->set('deny', ' ' . $this->get('deny') . ' ');
+            return $this;
         }
 
+        /**
+         * Remove some spaces post save.
+         *
+         * @return $this
+         */
+        public function postSave()
+        {
+            $this->set('allow', trim($this->get('allow')));
+            $this->set('deny', trim($this->get('deny')));
+            return $this;
+        }
+
+        /**
+         * Remove some spaces post load.
+         *
+         * @return $this
+         */
+        public function postLoad()
+        {
+            return $this->postSave();
+        }
+
+        /**
+         * Load a request by the path.
+         *
+         * @param string $request
+         * @param IManager $manager
+         * @return Authorize
+         */
+        public static function loadByRequest($request, IManager $manager)
+        {
+            return $manager->load(['request' => $request], new Authorize);
+        }
     }

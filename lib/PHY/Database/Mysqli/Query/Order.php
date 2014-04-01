@@ -17,6 +17,9 @@
 
     namespace PHY\Database\Mysqli\Query;
 
+    use PHY\Database\Mysqli\Query\Element;
+    use PHY\Database\Query\IOrder;
+
     /**
      * Our Order classes should all have the same query building functions.
      *
@@ -26,7 +29,7 @@
      * @license http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
      * @author John Mullanaphy <john@jo.mu>
      */
-    class Order extends \PHY\Database\Mysqli\Query\Element implements \PHY\Database\Query\IOrder
+    class Order extends Element implements IOrder
     {
 
         protected $order = [];
@@ -41,7 +44,7 @@
         public function by($by = '_id')
         {
             if ($this->current['direction'] !== null) {
-                $this->order[] = ' `'.$this->clean($by).'` '.$this->current['direction'].' ';
+                $this->order[] = ' `' . $this->clean($by) . '` ' . $this->current['direction'] . ' ';
                 $this->current = [
                     'by' => null,
                     'direction' => null
@@ -56,7 +59,7 @@
         public function direction($direction = 'asc')
         {
             if ($this->current['by'] !== null) {
-                $this->order[] = ' `'.$this->clean($this->current['by']).'` '.$direction.' ';
+                $this->order[] = ' `' . $this->clean($this->current['by']) . '` ' . $direction . ' ';
                 $this->current = [
                     'by' => null,
                     'direction' => null
@@ -78,7 +81,7 @@
          */
         public function toArray()
         {
-            return $this->select;
+            return $this->order;
         }
 
         /**
@@ -86,7 +89,7 @@
          */
         public function toJSON($flags = 0)
         {
-            return json_encode($this->select, $flags);
+            return json_encode($this->order, $flags);
         }
 
         /**
@@ -95,7 +98,7 @@
         public function toString()
         {
             if ($this->order) {
-                return ' ORDER BY ('.join(', ', $this->order).') ';
+                return ' ORDER BY (' . join(', ', $this->order) . ') ';
             } else {
                 return ' ';
             }

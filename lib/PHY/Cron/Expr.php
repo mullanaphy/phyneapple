@@ -40,6 +40,28 @@
         protected $created;
         protected $scheduled;
 
+        protected static $_numerics = [
+            'jan' => 1,
+            'feb' => 2,
+            'mar' => 3,
+            'apr' => 4,
+            'may' => 5,
+            'jun' => 6,
+            'jul' => 7,
+            'aug' => 8,
+            'sep' => 9,
+            'oct' => 10,
+            'nov' => 11,
+            'dec' => 12,
+            'sun' => 0,
+            'mon' => 1,
+            'tue' => 2,
+            'wed' => 3,
+            'thu' => 4,
+            'fri' => 5,
+            'sat' => 6
+        ];
+
         /**
          * Set an expression on load.
          *
@@ -58,17 +80,27 @@
          * Set an expression.
          *
          * @param string $expr
-         * @return \PHY\Cron\Expr
-         * @throws \PHY\Cron\Exception
+         * @return $this
+         * @throws Exception
          */
         public function setExpr($expr)
         {
             $e = preg_split('#\s+#', $expr, null, PREG_SPLIT_NO_EMPTY);
             if (sizeof($e) < 5 || sizeof($e) > 6) {
-                throw new Exception('Invalid cron expression: '.$expr.'.');
+                throw new Exception('Invalid cron expression: ' . $expr . '.');
             }
             $this->expr = $e;
             return $this;
+        }
+
+        /**
+         * Grab our expression.
+         *
+         * @return string
+         */
+        public function getExpr()
+        {
+            return $this->expr;
         }
 
         /**
@@ -76,8 +108,8 @@
          *
          * Supports $this->setCronExpr('* 0-5,10-59/5 2-10,15-25 january-june/2 mon-fri')
          *
-         * @param mixed $event
-         * @return boolean
+         * @param mixed $time
+         * @return bool
          */
         public function check($time)
         {
@@ -102,8 +134,8 @@
          * Match an exception.
          *
          * @param string $expr
-         * @param numeric $num
-         * @return boolean
+         * @param int $num
+         * @return bool
          * @throws Exception
          */
         public function match($expr, $num)
@@ -126,10 +158,10 @@
             if (strpos($expr, '/') !== false) {
                 $e = explode('/', $expr);
                 if (sizeof($e) !== 2) {
-                    throw new Exception('Invalid cron expression, expecting "match/modulus": '.$expr.'. #');
+                    throw new Exception('Invalid cron expression, expecting "match/modulus": ' . $expr . '. #');
                 }
                 if (!is_numeric($e[1])) {
-                    throw new Exception('Invalid cron expression, expecting numeric modulus: '.$expr.'. #');
+                    throw new Exception('Invalid cron expression, expecting numeric modulus: ' . $expr . '. #');
                 }
                 $expr = $e[0];
                 $mod = $e[1];
@@ -141,26 +173,22 @@
             if ($expr === '*') {
                 $from = 0;
                 $to = 60;
-            }
-
-            // handle range
+            } // handle range
             elseif (strpos($expr, '-') !== false) {
                 $e = explode('-', $expr);
                 if (sizeof($e) !== 2) {
-                    throw new Exception('Invalid cron expression, expecting "from-to" structure: '.$expr.'.');
+                    throw new Exception('Invalid cron expression, expecting "from-to" structure: ' . $expr . '.');
                 }
                 $from = $this->getNumeric($e[0]);
                 $to = $this->getNumeric($e[1]);
-            }
-
-            // handle regular token
+            } // handle regular token
             else {
                 $from = $this->getNumeric($expr);
                 $to = $from;
             }
 
             if ($from === false || $to === false) {
-                throw new Exception('Invalid cron expression: '.$expr);
+                throw new Exception('Invalid cron expression: ' . $expr);
             }
 
             return ($num >= $from) && ($num <= $to) && ($num % $mod === 0);
@@ -169,42 +197,19 @@
         /**
          * Get a numeric version of linux cron dates.
          *
-         * @staticvar array $_data
          * @param string $value
          * @return int|boolean
          */
         public function getNumeric($value)
         {
-            static $_data = [
-            'jan' => 1,
-            'feb' => 2,
-            'mar' => 3,
-            'apr' => 4,
-            'may' => 5,
-            'jun' => 6,
-            'jul' => 7,
-            'aug' => 8,
-            'sep' => 9,
-            'oct' => 10,
-            'nov' => 11,
-            'dec' => 12,
-            'sun' => 0,
-            'mon' => 1,
-            'tue' => 2,
-            'wed' => 3,
-            'thu' => 4,
-            'fri' => 5,
-            'sat' => 6
-            ];
-
             if (is_numeric($value)) {
                 return $value;
             }
 
             if (is_string($value)) {
                 $value = strtolower(substr($value, 0, 3));
-                if (array_key_exists($value, $_data)) {
-                    return $_data[$value];
+                if (array_key_exists($value, self::$_numerics)) {
+                    return self::$_numerics[$value];
                 }
             }
 

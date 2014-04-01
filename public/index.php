@@ -17,55 +17,61 @@
 
     namespace PHY;
 
-require '..'.DIRECTORY_SEPARATOR.'vendor'.DIRECTORY_SEPARATOR.'autoload.php';
+    require '..'.DIRECTORY_SEPARATOR.'vendor'.DIRECTORY_SEPARATOR.'autoload.php';
 
-    call_user_func(
-        function() {
-            /*
-             * Make sure we're on PHP5.4+
-             */
-            if (version_compare(phpversion(), '5.4.0', '<') === true) {
-                echo '<html><head><title>Fiddlesticks...</title></head><body><div><h3>Sorry Mate!</h3><p>PHY 2.0 supports PHP 5.4+.</p></div></body></html>';
-                exit;
-            }
-
-            /*
-             * Setup our app, add a debugger, and start profiling.
-             */
-            $app = new App;
-            $debugger = new Debugger;
-            $debugger->profile(true);
-            $app->setDebugger($debugger);
-
-            /*
-             * Initiate a new request from global values.
-             */
-            $request = Request::createFromGlobal();
-
-            /*
-             * Now add a path object for routing files.
-             */
-            $path = new Path([
-                'base' => dirname(dirname(__FILE__)).DIRECTORY_SEPARATOR
-                ]);
-            $app->setPath($path);
-
-            /*
-             * Setup our site and debugging.
-             */
-            $app->setNamespace($request->getEnvironmental('PHY_NAMESPACE', 'default'));
-            $app->setEnvironment((bool)$request->getEnvironmental('PHY_ENVIRONMENT', 'development'));
-
-            /*
-             * Add in our logged in user.
-             */
-            $app->setUser(new \PHY\Model\User($app->get('session/user')?
-                    : []));
-
-            /*
-             * Now let's render our app.
-             */
-            $app->render($request);
+    call_user_func(function () {
+        /*
+         * Make sure we're on PHP5.4+
+         */
+        if (version_compare(phpversion(), '5.4.0', '<') === true) {
+            echo '<html><head><title>Fiddlesticks...</title></head><body><div><h3>Sorry Mate!</h3><p>PHY 2.0 supports PHP 5.4+.</p></div></body></html>';
+            exit;
         }
-    );
+
+        /*
+         * Setup our app, add a debugger, and start profiling.
+         */
+        $app = new App;
+        $app->setRootDirectory(dirname(dirname(__FILE__)).DIRECTORY_SEPARATOR);
+        $app->setPublicDirectory(dirname(__FILE__).DIRECTORY_SEPARATOR);
+
+        $debugger = new Debugger;
+        $debugger->profile(true);
+        $app->setDebugger($debugger);
+
+        /*
+         * Initiate a new request from global values.
+         */
+        $request = HTTP\Request::createFromGlobal();
+
+        /*
+         * Now add a path object for routing files.
+         */
+        $path = new Path([
+            'root' => $app->getRootDirectory(),
+            'public' => $app->getPublicDirectory()
+        ]);
+        $app->setPath($path);
+
+        /*
+         * Setup our site and debugging.
+         */
+        $app->setNamespace($request->getEnvironmental('PHY_NAMESPACE', 'default'));
+        $app->setEnvironment($request->getEnvironmental('PHY_ENVIRONMENT', 'development'));
+
+        /*
+         * Add in our logged in user.
+         */
+        $app->setUser(new Model\User($app->get('session/user')
+            ? : []));
+
+        /*
+         * Now let's render our app.
+         */
+        $app->render($request);
+    });
+
+
+
+
 

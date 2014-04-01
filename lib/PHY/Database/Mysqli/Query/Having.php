@@ -17,6 +17,8 @@
 
     namespace PHY\Database\Mysqli\Query;
 
+    use PHY\Database\Mysqli\Query\Element;
+
     /**
      * Our Having classes should all have the same query building functions.
      *
@@ -26,7 +28,7 @@
      * @license http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
      * @author John Mullanaphy <john@jo.mu>
      */
-    class Having extends \PHY\Database\Mysqli\Query\Element
+    class Having extends Element
     {
 
         protected $having = [];
@@ -53,7 +55,7 @@
         public function toString()
         {
             if ($this->having) {
-                return ' HAVING ('.implode(') AND (', $this->having).') ';
+                return ' HAVING (' . implode(') AND (', $this->having) . ') ';
             } else {
                 return ' ';
             }
@@ -64,7 +66,7 @@
          */
         public function raw($string)
         {
-            $this->where[] = $string;
+            $this->having[] = $string;
             return $this;
         }
 

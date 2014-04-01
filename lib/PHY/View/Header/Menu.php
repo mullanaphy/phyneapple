@@ -17,6 +17,10 @@
 
     namespace PHY\View\Header;
 
+    use PHY\View\AView;
+    use PHY\Event;
+    use PHY\Event\Item as EventItem;
+
     /**
      * Header menu links.
      *
@@ -26,7 +30,7 @@
      * @license http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
      * @author John Mullanaphy <john@jo.mu>
      */
-    class Menu extends \PHY\View\AView
+    class Menu extends AView
     {
 
         /**
@@ -35,17 +39,15 @@
         public function structure()
         {
             $controller = $this->getLayout()->getController();
-            $app = $controller->getApp();
             $links = $this->getVariable('links');
             $root = $controller->getRequest()->getEnvironmental('REQUEST_URI');
             $root = explode('/', $root)[0];
-            $event = new \PHY\Event\Item('block/core/menu', [
+            $event = new EventItem('block/core/menu', [
                 'links' => $links
-                ]);
-            \PHY\Event::dispatch($event);
+            ]);
+            Event::dispatch($event);
             $links = $event->links;
-            $this->setTemplate('core/sections/header/menu.phtml')
-                ->setVariable('links', $links)
+            $this->setTemplate('core/sections/header/menu.phtml')->setVariable('links', $links)
                 ->setVariable('root', $root);
         }
 

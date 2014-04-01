@@ -15,18 +15,18 @@
      *
      */
 
-    namespace PHY;
+    namespace PHY\Http;
 
     /**
      * Handles all the request data.
      *
-     * @package PHY\Request
+     * @package PHY\Http\Request
      * @category PHY\Phyneapple
      * @copyright Copyright (c) 2013 Phyneapple! (http://www.phyneapple.com/)
      * @license http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
      * @author John Mullanaphy <john@jo.mu>
      */
-    class Request
+    class Request implements IRequest
     {
 
         protected $path = '';
@@ -42,12 +42,7 @@
         protected static $_defaultHeaders = [];
 
         /**
-         * Set default values.
-         *
-         * @param string $path
-         * @param array $parameters
-         * @param array $environmentals
-         * @param array $headers
+         * {@inheritDoc}
          */
         public function __construct($path, array $parameters = [], array $environmentals = [], $headers = [])
         {
@@ -59,9 +54,7 @@
         }
 
         /**
-         * Create a new Request using global variables.
-         *
-         * @return \PHY\Request
+         * {@inheritDoc}
          */
         public static function createFromGlobal()
         {
@@ -83,11 +76,7 @@
         }
 
         /**
-         * Return a value from the REQUEST if it exists.
-         *
-         * @param string $key
-         * @param mixed $default
-         * @return mixed|null
+         * {@inheritDoc}
          */
         public function get($key, $default = null)
         {
@@ -97,11 +86,7 @@
         }
 
         /**
-         * Return a value from our environmentals if it exists.
-         *
-         * @param string $key
-         * @param mixed $default
-         * @return mixed|null
+         * {@inheritDoc}
          */
         public function getEnvironmental($key, $default = null)
         {
@@ -111,19 +96,15 @@
         }
 
         /**
-         * Get currently defined environnmentals.
-         *
-         * @return array
+         * {@inheritDoc}
          */
         public function getEnvironmentals()
         {
-            return $this->envirmonetals;
+            return $this->environmentals;
         }
 
         /**
-         * Get default environmentals.
-         *
-         * @return array
+         * {@inheritDoc}
          */
         public function getDefaultEnvironmentals()
         {
@@ -131,9 +112,7 @@
         }
 
         /**
-         * Get default headers.
-         *
-         * @return array
+         * {@inheritDoc}
          */
         public function getDefaultHeaders()
         {
@@ -141,9 +120,7 @@
         }
 
         /**
-         * Get default methods.
-         *
-         * @return array
+         * {@inheritDoc}
          */
         public function getDefaultMethods()
         {
@@ -151,9 +128,7 @@
         }
 
         /**
-         * Return the current request method.
-         *
-         * @return string
+         * {@inheritDoc}
          */
         public function getMethod()
         {
@@ -161,9 +136,7 @@
         }
 
         /**
-         * Get allowed methods.
-         *
-         * @return array
+         * {@inheritDoc}
          */
         public function getMethods()
         {
@@ -171,10 +144,7 @@
         }
 
         /**
-         * Returns an array of allowed request method calls.
-         *
-         * @return array
-         * @static
+         * {@inheritDoc}
          */
         public function getParameters()
         {
@@ -182,10 +152,7 @@
         }
 
         /**
-         * See if our request is a given method.
-         *
-         * @param string $method
-         * @return boolean
+         * {@inheritDoc}
          */
         public function isMethod($method)
         {
@@ -193,10 +160,7 @@
         }
 
         /**
-         * Set environmentals.
-         *
-         * @param array $environmentals
-         * @return \PHY\Request
+         * {@inheritDoc}
          */
         public function setEnvironmentals(array $environmentals = [])
         {
@@ -206,10 +170,7 @@
         }
 
         /**
-         * Set headers.
-         *
-         * @param array $headers
-         * @return \PHY\Request
+         * {@inheritDoc}
          */
         public function setHeaders(array $headers = [])
         {
@@ -218,10 +179,7 @@
         }
 
         /**
-         * Set allowed methods.
-         *
-         * @param array $methods
-         * @return \PHY\Request
+         * {@inheritDoc}
          */
         public function setMethods(array $methods = [])
         {
@@ -231,19 +189,25 @@
         }
 
         /**
-         * Set parameters.
-         *
-         * @param array $parameters
+         * {@inheritDoc}
+         */
+        public function addParameters(array $parameters = [])
+        {
+            $this->parameters += $parameters;
+            return $this;
+        }
+
+        /**
+         * {@inheritDoc}
          */
         public function setParameters(array $parameters = [])
         {
             $this->parameters = $parameters;
+            return $this;
         }
 
         /**
-         * Get the request's root path.
-         * 
-         * @return string
+         * {@inheritDoc}
          */
         public function getRootPath()
         {
@@ -251,11 +215,9 @@
         }
 
         /**
-         * Get the request's uri.
-         *
-         * @return string
+         * {@inheritDoc}
          */
-        public function getUri()
+        public function getUrl()
         {
             return $this->getEnvironmental('REQUEST_URI', '/');
         }

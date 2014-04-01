@@ -17,6 +17,11 @@
 
     namespace PHY\View;
 
+    use PHY\Controller\IController;
+    use PHY\Event;
+    use PHY\Event\Item as EventItem;
+    use PHY\Variable\Obj;
+
     /**
      * Handles the hierarchy of the DOM and makes sure elements and their
      * children are rendered to the page.
@@ -27,7 +32,7 @@
      * @license http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
      * @author John Mullanaphy <john@jo.mu>
      */
-    class Layout
+    class Layout implements ILayout
     {
 
         protected $controller = null;
@@ -36,9 +41,7 @@
         protected $rendered = false;
 
         /**
-         * Stringify our class.
-         *
-         * @return string
+         * {@inheritDoc}
          */
         public function __toString()
         {
@@ -46,10 +49,7 @@
         }
 
         /**
-         * Load config blocks to use with our layout.
-         *
-         * @return \PHY\View\Layout
-         * @throws \PHY\View\Layout\Exception
+         * {@inheritDoc}
          */
         public function loadBlocks()
         {
@@ -57,9 +57,8 @@
             $app = $this->getController()->getApp();
             foreach ($configs as $key) {
                 $file = false;
-                foreach ($app->getPath()->getPaths(
-                    'design'.DIRECTORY_SEPARATOR.$app->getNamespace().DIRECTORY_SEPARATOR.'config'.DIRECTORY_SEPARATOR.$key.'.json', 'design'.DIRECTORY_SEPARATOR.'default'.DIRECTORY_SEPARATOR.'config'.DIRECTORY_SEPARATOR.$key.'.json'
-                ) as $check) {
+                foreach ($app->getPath()
+                             ->getPaths('design' . DIRECTORY_SEPARATOR . $app->getNamespace() . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . $key . '.json', 'design' . DIRECTORY_SEPARATOR . 'default' . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . $key . '.json') as $check) {
                     if (is_file($check)) {
                         $file = $check;
                         break;
@@ -73,7 +72,7 @@
                 fclose($FILE);
                 $content = preg_replace(['#/\*.+?\*/#is'], '', $content);
                 $content = json_decode($content);
-                $content = (new \PHY\Variable\Obj($content))->toArray();
+                $content = (new Obj($content))->toArray();
                 foreach ($content as $key => $value) {
                     $this->buildBlocks($key, $value);
                 }
@@ -82,10 +81,7 @@
         }
 
         /**
-         * Return a block.
-         *
-         * @param string $block
-         * @return \PHY\View\IView
+         * {@inheritDoc}
          */
         public function block($block)
         {
@@ -95,28 +91,23 @@
         }
 
         /**
-         * Set our controller.
-         *
-         * @param \PHY\Controller\AController $controller
-         * @return \PHY\View\Layout
+         * {@inheritDoc}
          */
-        public function setController(\PHY\Controller\AController $controller)
+        public function setController(IController $controller)
         {
-            $event = new \PHY\Event\Item('layout/controller/before', [
+            $event = new EventItem('layout/controller/before', [
                 'view' => $this,
                 'controller' => $controller
-                ]);
-            \PHY\Event::dispatch($event);
+            ]);
+            Event::dispatch($event);
             $this->controller = $controller;
             $event->setName('layout/controller/after');
-            \PHY\Event::dispatch($event);
+            Event::dispatch($event);
             return $this;
         }
 
         /**
-         * Get our working controller.
-         * 
-         * @return \PHY\Controller\AController
+         * {@inheritDoc}
          */
         public function getController()
         {
@@ -124,9 +115,7 @@
         }
 
         /**
-         * Get a stringified version of our layout.
-         *
-         * @return string
+         * {@inheritDoc}
          */
         public function toString()
         {
@@ -134,9 +123,7 @@
         }
 
         /**
-         * Render our layout.
-         *
-         * @return string
+         * {@inheritDoc}
          */
         public function render()
         {
@@ -145,12 +132,7 @@
         }
 
         /**
-         * Recursively build our blocks starting with 'layout'.
-         *
-         * @param string $key
-         * @param array $config
-         * @return \PHY\View\Layout
-         * @throws Exception
+         * {@inheritDoc}
          */
         public function buildBlocks($key, $config)
         {
@@ -160,13 +142,13 @@
                 } else {
                     $viewClass = ucfirst($config['viewClass']);
                 }
-                $class = '\PHY\View\\'.$viewClass;
+                $class = '\PHY\View\\' . $viewClass;
                 if (!class_exists($class)) {
-                    throw new Exception('Cannot find '.$class.' view class.');
+                    throw new Exception('Cannot find ' . $class . ' view class.');
                 }
                 $this->blocks[$key] = new $class($key, $config);
             } else {
-                $this->blocks[$key] = new \PHY\View\Block($key, $config);
+                $this->blocks[$key] = new Block($key, $config);
             }
             $this->blocks[$key]->setLayout($this);
             if ($children = $this->blocks[$key]->getChildren()) {

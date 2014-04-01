@@ -17,6 +17,9 @@
 
     namespace PHY\Model\Authorize;
 
+    use PHY\Model\Collection as BaseCollection;
+    use User;
+
     /**
      * Authorization collection.
      *
@@ -26,7 +29,7 @@
      * @license http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
      * @author John Mullanaphy <john@jo.mu>
      */
-    class Collection extends \PHY\Model\ACollection
+    class Collection extends BaseCollection
     {
 
         protected static $_source = '\PHY\Model\Authorize';
@@ -35,23 +38,23 @@
          * Set up what User to use along side this Collection.
          * If none is provided then Modules will be all willy-nilly.
          *
-         * @param \PHY\Model\User $User
-         * @return \PHY\Model\Module\Collection
+         * @param User $User
+         * @return $this
          */
-        public function setUser(\PHY\Model\User $User)
+        public function setUser(User $User)
         {
-            $this->setResource('User', $User);
+            $this->setResource('user', $User);
             return $this;
         }
 
         /**
          * Get a defined user.
          *
-         * @return \PHY\Model\User
+         * @return User
          */
         public function getUser()
         {
-            return $this->getResource('User');
+            return $this->getResource('user');
         }
 
     }

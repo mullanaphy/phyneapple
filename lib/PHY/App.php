@@ -490,7 +490,7 @@
         public function loadEvents(array $events = [])
         {
             foreach ($events as $event) {
-                Event::on($event['on'], new EventDispatcher($event['class'] . '::' . $event['method'], array_key_exists('parameters', $event)
+                Event::on($event['on'], new EventDispatcher(str_replace('/', '\\', $event['class']) . '::' . $event['method'], array_key_exists('parameters', $event)
                     ? $event['parameters']
                     : [], array_key_exists('recurring', $event)
                     ? $event['recurring']

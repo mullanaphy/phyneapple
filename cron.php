@@ -2,7 +2,9 @@
 
     /**
      * Phyneapple!
+     *
      * LICENSE
+     *
      * This source file is subject to the Open Software License (OSL 3.0)
      * that is bundled with this package in the file LICENSE.txt.
      * It is also available through the world-wide-web at this URL:
@@ -10,7 +12,7 @@
      * If you did not receive a copy of the license and are unable to
      * obtain it through the world-wide-web, please send an email
      * to license@phyneapple.com so we can send you a copy immediately.
-
+     *
      */
 
     namespace PHY;
@@ -29,7 +31,7 @@
     /*
      * Initiates Phyneapple's core files.
      */
-    require '..'.DIRECTORY_SEPARATOR.'vendor'.DIRECTORY_SEPARATOR.'autoload.php';
+    require '..' . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'autoload.php';
 
     /**
      * This can be called via command line or browser. Runs Cron tasks that
@@ -62,7 +64,7 @@
          * Now add a path object for routing files.
          */
         $path = new Path([
-            'base' => dirname(dirname(__FILE__)).DIRECTORY_SEPARATOR
+            'base' => dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR
         ]);
         $app->setPath($path);
 
@@ -75,7 +77,7 @@
 
         if (!($tasks = $app->get('cache/core/cron/tasks'))) {
             $tasks = [];
-            $files = glob('config'.$app->getNamespace().DIRECTORY_SEPARATOR.'cron'.DIRECTORY_SEPARATOR.'*.json');
+            $files = glob('config' . $app->getNamespace() . DIRECTORY_SEPARATOR . 'cron' . DIRECTORY_SEPARATOR . '*.json');
             foreach ($files as $file) {
                 $FILE = fopen($file, 'r');
                 if ($FILE) {
@@ -112,7 +114,7 @@
             } else {
                 echo PHP_EOL;
             }
-            $message = 'Ran '.$run.' out of a possible '.count($Cron).' tasks';
+            $message = 'Ran ' . $run . ' out of a possible ' . count($Cron) . ' tasks';
             echo $message, PHP_EOL, '--------------------------------------------------', PHP_EOL, 'RUNTIME: ', $app->profile();
             if (!PLAIN_TEXT) {
                 echo '</pre></body></html>';

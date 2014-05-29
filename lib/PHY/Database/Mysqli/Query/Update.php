@@ -18,18 +18,18 @@
     namespace PHY\Database\Mysqli\Query;
 
     use PHY\Database\Mysqli\Query\Element;
-    use PHY\Database\Query\IInsert;
+    use PHY\Database\Query\IUpdate;
 
     /**
-     * Our Insert classes should all have the same query building functions.
+     * Our Update classes should all have the same query building functions.
      *
-     * @package PHY\Database\Mysqli\Query\Insert
+     * @package PHY\Database\Mysqli\Query\Update
      * @category PHY\Phyneapple
      * @copyright Copyright (c) 2013 Phyneapple! (http://www.phyneapple.com/)
      * @license http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
      * @author John Mullanaphy <john@jo.mu>
      */
-    class Insert extends Element implements IInsert
+    class Update extends Element implements IUpdate
     {
 
         protected $computed = '';
@@ -92,7 +92,7 @@
          */
         public function toJSON($flags = 0)
         {
-            return json_encode(['insert' => $this->toArray()], $flags);
+            return json_encode(['update' => $this->toArray()], $flags);
         }
 
         /**
@@ -102,18 +102,15 @@
         {
             if ($this->keys) {
                 if (!$this->computed) {
-                    $keys = [];
-                    $values = [];
+                    $data = [];
                     foreach ($this->keys as $key) {
-                        $keys[] = $this->clean($key, true);
-                        $values[] = '?';
+                        $data[] = $this->clean($key, true) . '=?';
                     }
-                    $this->computed = ' INSERT INTO ' . $this->clean($this->table, true) . ' (' . implode(',', $keys) . ') VALUES (' . implode(',', $values) . ') ';
+                    $this->computed = ' UPDATE ' . $this->clean($this->table, true) . ' SET ' . implode(',', $data) . ' ';
                 }
                 return $this->computed;
             } else {
                 return ' ';
             }
         }
-
     }

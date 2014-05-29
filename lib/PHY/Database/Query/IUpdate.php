@@ -17,55 +17,46 @@
 
     namespace PHY\Database\Query;
 
-    use PHY\Database\IManager;
-
     /**
-     * Contract for all Query elements.
+     * Our Update classes should all have the same query building functions.
      *
-     * @package PHY\Database\Query\IElement
+     * @package PHY\Database\IUpdate
      * @category PHY\Phyneapple
      * @copyright Copyright (c) 2013 Phyneapple! (http://www.phyneapple.com/)
      * @license http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
      * @author John Mullanaphy <john@jo.mu>
      */
-    interface IElement
+    interface IUpdate extends IElement
     {
 
         /**
-         * Convert our portion of an element block into a query.
+         * Set the table we're going to save to.
          *
-         * @return string
+         * @param string $table
+         * @return $this
          */
-        public function __toString();
+        public function table($table);
 
         /**
-         * Set a manager to use with our objects.
+         * Set the data that our insert should be well inserting. If $key is an array then it will append all the data.
          *
-         * @param IManager $manager
-         * @return IElement
+         * @param string|array $key
+         * @return $this
          */
-        public function setManager(IManager $manager);
+        public function add($key);
 
         /**
-         * See if a manager has been set on our
+         * Unset a key.
          *
-         * @return boolean
+         * @param string $key
+         * @return $this
          */
-        public function hasManager();
+        public function remove($key);
 
         /**
-         * Return our manager, if none is set then throw an exception.
+         * Clear out all of our data.
          *
-         * @return IManager
-         * @throws Exception
-         */
-        public function getManager();
-
-        /**
-         * Clean scalars and numbers.
-         *
-         * @param mixed $scalar
          * @return mixed
          */
-        public function clean($scalar);
+        public function reset();
     }

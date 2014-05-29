@@ -71,7 +71,7 @@
             try {
                 return $this->toString();
             } catch (\Exception $e) {
-                return '<div class="alert alert-danger"><strong>'.strtoupper(get_class($e)).'</strong> '.$e->getMessage().' ['.$e->getFile().':'.$e->getLine().']</div>';
+                return '<div class="alert alert-danger"><strong>' . strtoupper(get_class($e)) . '</strong> ' . $e->getMessage() . ' [' . $e->getFile() . ':' . $e->getLine() . ']</div>';
             }
         }
 
@@ -316,7 +316,7 @@
             }
             $file = false;
             $paths = $this->getPath()
-                ->getPaths('design'.DIRECTORY_SEPARATOR.$this->theme.DIRECTORY_SEPARATOR.'blocks'.DIRECTORY_SEPARATOR.str_replace('/', DIRECTORY_SEPARATOR, $source), 'design'.DIRECTORY_SEPARATOR.'default'.DIRECTORY_SEPARATOR.'blocks'.DIRECTORY_SEPARATOR.str_replace('/', DIRECTORY_SEPARATOR, $source));
+                ->getPaths('design' . DIRECTORY_SEPARATOR . $this->theme . DIRECTORY_SEPARATOR . 'blocks' . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $source), 'design' . DIRECTORY_SEPARATOR . 'default' . DIRECTORY_SEPARATOR . 'blocks' . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $source));
             foreach ($paths as $check) {
                 if (is_file($check) && is_readable($check)) {
                     $file = $check;
@@ -324,7 +324,7 @@
                 }
             }
             if (!$file) {
-                throw new \Exception('Source file "'.$file.'" was not found. Nor was "'.$source.'"');
+                throw new \Exception('Source file "' . $file . '" was not found. Nor was "' . $source . '"');
             }
 
             $content = call_user_func(function () use ($file) {

@@ -36,7 +36,7 @@
      * @author John Mullanaphy <john@jo.mu>
      * @todo Make this make sense. Try and break up what should be global and what should be in the registry class.
      */
-    final class App
+    class App
     {
 
         private $namespace = 'default';
@@ -166,7 +166,10 @@
         public function getPath()
         {
             if ($this->path === null) {
-                $this->setPath(new Path);
+                $this->setPath(new Path([
+                    'root' => $this->getRootDirectory(),
+                    'public' => $this->getPublicDirectory(),
+                ]));
             }
             return $this->path;
         }
@@ -340,14 +343,11 @@
          */
         public function render(IRequest $request)
         {
-
-            $file = dirname(str_replace($this->getRootDirectory(), '', __FILE__));
-            if ($file === '/') {
-                $file = '';
-            }
-
             /* Look for a rewrite rule */
             try {
+                set_error_handler(function ($number, $message, $file, $line) {
+                    throw new \ErrorException($message, $number, $number, $file, $line);
+                });
                 $manager = $this->get('database/default.manager');
                 /* @var \PHY\Model\Rewrite $rewrite */
                 $rewrite = $manager->getModel('rewrite');
@@ -361,9 +361,9 @@
                     } else {
                         $path = $rewrite->destination;
                     }
+                } else {
+                    $path = $request->getUrl();
                 }
-
-                $path = $request->getUrl();
                 $pathParameters = explode('/', strtolower(trim($path, '/')));
                 if (count($pathParameters) >= 2) {
                     $controllerClass = array_shift($pathParameters);
@@ -397,13 +397,12 @@
                     }
                 }
 
+                /* @var \PHY\Controller\IController $controller */
                 if (class_exists('\PHY\Controller\\' . $controllerClass)) {
                     $_ = '\PHY\Controller\\' . $controllerClass;
                     $controller = new $_($this);
                 } else {
-                    $controller = new Controller\Error($this);
-                    $controller->setStatusCode(404);
-                    $controller->setMessage('Seems I couldn\'t find yout requests controller "' . $controllerClass . '". Blame the programmer, he\she almost definitely did it. Even if you put in the wrong url, just blame them. They\'re used to it!');
+                    throw new HttpException\NotFound('Seems I couldn\'t find your requests controller "' . $controllerClass . '". Blame the programmer, he\she almost definitely did it. Even if you put in the wrong url, just blame them. They\'re used to it!');
                 }
                 $controller->setRequest($request);
 
@@ -415,18 +414,20 @@
                 $controller->action($method);
                 $response = $controller->render();
             } catch (\Exception $exception) {
+                /* @var \PHY\Controller\Error $controller */
                 $controller = new Controller\Error($this);
-                try {
-                    throw $exception;
-                } catch (Database\Exception $exception) {
+                if ($exception instanceof Database\Exception) {
                     $controller->setMessage('Sorry, yet there was an issue trying to connect to our database. Please try again in a bit');
-                } catch (HttpException $exception) {
+                } else if ($exception instanceof HttpException) {
                     $controller->httpException($exception);
-                } catch (Exception $exception) {
+                } else if ($exception instanceof Exception) {
                     $controller->setMessage('Sorry, but something happened Phyneapple related. Could have been us or our framework. Looking in to it...');
-                } catch (\Exception $exception) {
+                } else if ($exception instanceof \ErrorException) {
+                    $controller->setMessage('Okay, I got this one, seems there is an issue related to the code itself. Hopefully the developer is logging these exceptions.');
+                } else {
                     $controller->setMessage('Seems there was general error. We are checking it out.');
                 }
+                $controller->setException($exception);
                 $controller->action('index');
                 $response = $controller->render();
             }
@@ -450,8 +451,9 @@
         }
 
         /**
+         * Get our root directory, this is the base of everything.
          *
-         * @return type
+         * @return string
          */
         public function getRootDirectory()
         {
@@ -471,6 +473,7 @@
         }
 
         /**
+         * Get our public folder's base path.
          *
          * @return string
          */

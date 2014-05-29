@@ -48,25 +48,21 @@
             if ($values) {
                 $value = array_shift($values);
             } else {
-                $value = $this
-                    ->getApp()
-                    ->get('core/component/database');
+                $value = $this->getApp()->get('core/component/database');
             }
             if (!array_key_exists($namespace, $this->resources)) {
                 $this->resources[$namespace] = [];
             }
             if (!array_key_exists($value, $this->resources[$namespace])) {
                 $database = false;
-                $config = $this
-                    ->getApp()
-                    ->get('config/database/'.$value);
+                $config = $this->getApp()->get('config/database/' . $value);
                 $event = new EventItem('component/load/before', [
                     'config' => $config,
                     'type' => $value
                 ]);
                 Event::dispatch($event);
                 if ($event->config && array_key_exists('type', $event->config)) {
-                    $database = '\PHY\Database\\'.$event->config['type'];
+                    $database = '\PHY\Database\\' . $event->config['type'];
                     $database = new $database($event->config);
                 }
                 if ($database) {
@@ -77,7 +73,7 @@
                     ]));
                 } else {
                     if (!$graceful) {
-                        throw new Exception('Component "database/'.$value.'" is undefined.');
+                        throw new Exception('Component "database/' . $value . '" is undefined.');
                     }
                 }
             }
@@ -93,13 +89,13 @@
                     if (!method_exists($temp, $callMethod)) {
                         $method = false;
                         foreach (['get', 'has', 'is'] as $m) {
-                            if (method_exists($temp, $m.$callMethod)) {
-                                $method = $m.$callMethod;
+                            if (method_exists($temp, $m . $callMethod)) {
+                                $method = $m . $callMethod;
                                 break;
                             }
                         }
                         if (!$method) {
-                            throw new Exception('Magically (boo) loaded method broke the chain due to being lame... '.$callMethod.' is lame...');
+                            throw new Exception('Magically (boo) loaded method broke the chain due to being lame... ' . $callMethod . ' is lame...');
                         }
                         $callMethod = $method;
                     }

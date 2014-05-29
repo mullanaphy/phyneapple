@@ -29,11 +29,14 @@
      * @license http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
      * @author John Mullanaphy <john@jo.mu>
      */
-    class Collection implements ICollection, \Iterator
+    class Collection implements ICollection
     {
 
+        protected $count = null;
         protected $items = null;
         protected $manager = null;
+        protected $query = null;
+        protected $model = null;
         protected $raw = false;
         protected static $_source = '\PHY\Model\Entity';
 
@@ -45,6 +48,8 @@
          */
         public function setManager(IManager $manager)
         {
+            $model = static::$_source;
+            $this->model = new $model;
             $this->manager = $manager;
             return $this;
         }
@@ -67,9 +72,35 @@
         public function getQuery()
         {
             if ($this->query === null) {
-                $this->query = $this->getManager()->createQuery();
+                $this->query = $this->getManager()->createQuery()->selectFromModel($this->model);
             }
             return $this->query;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public function count()
+        {
+            if ($this->count === null) {
+                if ($this->items !== null) {
+                    $this->count = count($this->items);
+                } else {
+                    $query = clone $this->getQuery();
+                    $select = $query->get('select');
+                    $select->reset();
+                    $select->count();
+                    $limit = $query->get('limit');
+                    $limit->reset();
+                    $result = $query->execute()->getIterator();
+                    if ($result) {
+                        $this->count = (int)$result->fetch_array()[0];
+                    } else {
+                        $this->count = 0;
+                    }
+                }
+            }
+            return $this->count;
         }
 
         /**
@@ -83,7 +114,7 @@
             if ($this->raw) {
                 return $current;
             } else {
-                $class = self::$_source;
+                $class = static::$_source;
                 return new $class($current);
             }
         }
@@ -101,7 +132,7 @@
          */
         public function from()
         {
-            return $this->getQuery()->from;
+            return $this->getQuery()->get('from');
         }
 
         /**
@@ -111,7 +142,13 @@
         public function load()
         {
             if ($this->items === null) {
-                $this->items = $this->getQuery()->execute()->getIterator();
+                $query = $this->getQuery()->execute();
+                foreach ($query as $item) {
+                    $this->items[] = $item;
+                }
+                if (!$this->items) {
+                    $this->items = [];
+                }
             }
         }
 
@@ -137,7 +174,7 @@
          */
         public function order()
         {
-            return $this->getQuery()->order;
+            return $this->getQuery()->get('oder');
         }
 
         /**
@@ -171,7 +208,7 @@
          */
         public function select()
         {
-            return $this->getQuery()->select;
+            return $this->getQuery()->get('select');
         }
 
         /**
@@ -189,7 +226,20 @@
          */
         public function where()
         {
-            return $this->getQuery()->where;
+            return $this->getQuery()->get('where');
         }
 
+        /**
+         * @param int $skip
+         * @param int $limit
+         */
+        public function limit($skip = 0, $limit = null)
+        {
+            if ($limit === null) {
+                $this->getQuery()->get('limit')->limit($skip);
+            } else {
+                $this->getQuery()->get('limit')->skip($skip);
+                $this->getQuery()->get('limit')->limit($limit);
+            }
+        }
     }

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit colors="true" verbose="true" bootstrap="./bootstrap.php">
+    <testsuites>
+        <testsuite name="Phyneapple Tests">
+            <directory suffix="Test.php" phpVersion="5.4" phpVersionOperator=">=">.</directory>
+        </testsuite>
+    </testsuites>
+    <filter>
+        <whitelist>
+            <directory suffix=".php">.</directory>
+        </whitelist>
+    </filter>
+    <logging>
+        <log type="coverage-html" target="../var/log/phpunit/report" charset="UTF-8" yui="true" highlight="false"
+             lowUpperBound="35" highLowerBound="70"/>
+        <log type="testdox-html" target="../var/log/phpunit/testdox.html"/>
+    </logging>
+</phpunit>

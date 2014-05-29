@@ -17,6 +17,8 @@
 
     namespace PHY\Database;
 
+    use PHY\Model\IEntity;
+
     /**
      * All query based classes must have a generate ability.
      *
@@ -47,6 +49,7 @@
          * Set our manager.
          *
          * @param IManager $manager
+         * @return $this
          */
         public function setManager(IManager $manager);
 
@@ -85,4 +88,45 @@
          * @return IQuery
          */
         public function execute();
+
+        /**
+         * Create a SELECT query based on a model.
+         *
+         * @param IEntity $model
+         * @return $this
+         */
+        public function selectFromModel(IEntity $model);
+
+        /**
+         * Create a DELETE query based on a model.
+         *
+         * @param IEntity $model
+         * @return $this
+         */
+        public function deleteFromModel(IEntity $model);
+
+        /**
+         * Create an INSERT query based on a model.
+         *
+         * @param IEntity $model
+         * @return $this
+         */
+        public function insertFromModel(IEntity $model);
+
+        /**
+         * Create an UPDATE query based on a model.
+         *
+         * @param IEntity $model
+         * @return $this
+         */
+        public function updateFromModel(IEntity $model);
+
+        /**
+         * Create an UPSERT query based on a model.
+         *
+         * @param IEntity $model
+         * @return $this
+         */
+        public function upsertFromModel(IEntity $model);
+
     }

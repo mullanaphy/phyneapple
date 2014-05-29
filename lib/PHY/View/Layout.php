@@ -83,8 +83,15 @@
         /**
          * {@inheritDoc}
          */
-        public function block($block)
+        public function block($block, array $config = null)
         {
+            if ($config !== null) {
+                if (array_key_exists($block, $this->blocks)) {
+                    $this->blocks[$block]->setVariables($config);
+                } else {
+                    $this->buildBlocks($block, $config);
+                }
+            }
             return array_key_exists($block, $this->blocks)
                 ? $this->blocks[$block]
                 : null;

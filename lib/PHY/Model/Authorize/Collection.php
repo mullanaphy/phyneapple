@@ -18,7 +18,7 @@
     namespace PHY\Model\Authorize;
 
     use PHY\Model\Collection as BaseCollection;
-    use User;
+    use PHY\Model\User;
 
     /**
      * Authorization collection.

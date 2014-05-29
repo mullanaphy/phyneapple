@@ -20,6 +20,7 @@
     use PHY\App;
     use PHY\Event;
     use PHY\Event\Item as EventItem;
+    use PHY\Http\Exception\Forbidden;
     use PHY\Http\Exception\NotFound as HttpNotFoundException;
     use PHY\Http\IRequest;
     use PHY\Http\IResponse;
@@ -98,9 +99,9 @@
 
             /* See which route we should go with, depending on whether those methods exist or not. */
             $actions = [
-                $action.'_'.$request->getMethod(),
-                $action.'_get',
-                'index_'.$request->getMethod()
+                $action . '_' . $request->getMethod(),
+                $action . '_get',
+                'index_' . $request->getMethod()
             ];
             $action = 'index_get';
             foreach ($actions as $check) {
@@ -115,13 +116,13 @@
 
             /* @var \PHY\Database\IManager $manager */
             $manager = $app->get('database')->getManager();
-            $authorize = Authorize::loadByRequest($check.'/'.$action, $manager);
+            $authorize = Authorize::loadByRequest($check . '/' . $action, $manager);
             if (!$authorize->isAllowed($app->getUser())) {
-                $this->redirect('error/unauthorized');
+                throw new Forbidden('You cannot access this page.');
             }
-            $authorize = Authorize::loadByRequest($check.'/'.$action, $manager);
+            $authorize = Authorize::loadByRequest($check . '/' . $action, $manager);
             if (!$authorize->isAllowed($app->getUser())) {
-                $this->redirect('error/unauthorized');
+                throw new Forbidden('You cannot access this page.');
             }
 
             /* If everything is good, let's call the correct route. */
@@ -249,11 +250,10 @@
             if (!$url) {
                 return '/';
             }
-
             if (is_array($url)) {
                 $parameters = $url;
                 $url = array_shift($parameters);
-                $url .= '?'.http_build_query($parameters, '', '&amp;');
+                $url .= '?' . http_build_query($parameters, '', '&amp;');
             }
 
             if ($location) {
@@ -262,10 +262,10 @@
                 $routes = $path->getRoutes('public');
                 $paths = [];
                 foreach ($routes as $route) {
-                    $paths[$route.'resources'.DIRECTORY_SEPARATOR.$this->getApp()
-                        ->getNamespace().DIRECTORY_SEPARATOR.$location.DIRECTORY_SEPARATOR.$url] = DIRECTORY_SEPARATOR.'resources'.DIRECTORY_SEPARATOR.$this
-                            ->getApp()->getNamespace().DIRECTORY_SEPARATOR.$location.DIRECTORY_SEPARATOR.$url;
-                    $paths[$route.'resources'.DIRECTORY_SEPARATOR.'default'.DIRECTORY_SEPARATOR.$location.DIRECTORY_SEPARATOR.$url] = DIRECTORY_SEPARATOR.'resources'.DIRECTORY_SEPARATOR.'default'.DIRECTORY_SEPARATOR.$location.DIRECTORY_SEPARATOR.$url;
+                    $paths[$route . 'resources' . DIRECTORY_SEPARATOR . $this->getApp()
+                        ->getNamespace() . DIRECTORY_SEPARATOR . $location . DIRECTORY_SEPARATOR . $url] = DIRECTORY_SEPARATOR . 'resources' . DIRECTORY_SEPARATOR . $this
+                            ->getApp()->getNamespace() . DIRECTORY_SEPARATOR . $location . DIRECTORY_SEPARATOR . $url;
+                    $paths[$route . 'resources' . DIRECTORY_SEPARATOR . 'default' . DIRECTORY_SEPARATOR . $location . DIRECTORY_SEPARATOR . $url] = DIRECTORY_SEPARATOR . 'resources' . DIRECTORY_SEPARATOR . 'default' . DIRECTORY_SEPARATOR . $location . DIRECTORY_SEPARATOR . $url;
                 }
                 foreach ($paths as $check => $source) {
                     if (is_readable($check)) {
@@ -273,7 +273,7 @@
                     }
                 }
             } else {
-                $url = '/'.$url;
+                $url = '/' . $url;
             }
 
             return $url;
@@ -287,11 +287,11 @@
          */
         public function redirect($redirect = '')
         {
-            $response = new Response;
+            $response = $this->getResponse();
             if (is_array($redirect)) {
                 $parameters = $redirect;
                 $redirect = array_shift($parameters);
-                $redirect .= '?'.http_build_query($parameters);
+                $redirect .= '?' . http_build_query($parameters);
             }
             $response->redirect($redirect);
             return $response;

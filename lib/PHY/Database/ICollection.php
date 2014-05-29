@@ -26,7 +26,7 @@
      * @license http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
      * @author John Mullanaphy <john@jo.mu>
      */
-    interface ICollection extends \Iterator
+    interface ICollection extends \Iterator, \Countable
     {
 
         /**
@@ -43,6 +43,13 @@
          * @return array
          */
         public function map($function);
+
+        /**
+         * Return a count of our items.
+         *
+         * @return int
+         */
+        public function count();
 
         /**
          * Set whether each row returned is a mapped entity or just pure

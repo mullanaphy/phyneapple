@@ -37,15 +37,6 @@
         public function __construct(array $data = []);
 
         /**
-         * Handle loadBy{$key}($value) calls.
-         *
-         * @param string $method
-         * @param array $parameters
-         * @return IEntity
-         */
-        public function __call($method, $parameters);
-
-        /**
          * See if this initialize class exists.
          *
          * @return boolean
@@ -61,6 +52,15 @@
          * @throws Exception
          */
         public function set($key = '', $value = '');
+
+        /**
+         * Set our model's initial data.
+         *
+         * @param array $data
+         * @return IEntity
+         * @throws Exception
+         */
+        public function setInitialData(array $data = []);
 
         /**
          * If key is set you'll get the value back. Otherwise NULL.
@@ -114,6 +114,13 @@
         public function id();
 
         /**
+         * Get our table's primary key.
+         *
+         * @return string
+         */
+        public function getPrimaryKey();
+
+        /**
          * Get an array of settings.
          *
          * @return array
@@ -140,5 +147,64 @@
          * @return array
          */
         public function getSource();
-    }
 
+        /**
+         * Pre save method call.
+         */
+        public function preSave();
+
+        /**
+         * Post save method call.
+         *
+         * @param bool $success
+         */
+        public function postSave($success);
+
+        /**
+         * Pre load method call.
+         */
+        public function preLoad();
+
+        /**
+         * Post load method call.
+         *
+         * @param bool $success
+         */
+        public function postLoad($success);
+
+        /**
+         * Pre delete method call.
+         */
+        public function preDelete();
+
+        /**
+         * Post delete method call.
+         *
+         * @param bool $success
+         */
+        public function postDelete($success);
+
+        /**
+         * Pre insert method call.
+         */
+        public function preInsert();
+
+        /**
+         * Post insert method call.
+         *
+         * @param bool $success
+         */
+        public function postInsert($success);
+
+        /**
+         * Pre update method call.
+         */
+        public function preUpdate();
+
+        /**
+         * Post update method call.
+         *
+         * @param bool $success
+         */
+        public function postUpdate($success);
+    }

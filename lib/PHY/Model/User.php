@@ -73,17 +73,24 @@
         }
 
         /**
-         * Save changes to the database.
-         *
-         * @return array Response array.
+         * {@inheritDoc}
          */
-        public function save()
+        public function preSave()
         {
             if ($this->_password) {
                 $encoder = $this->getEncoder();
                 $this->data['password'] = $encoder->hashPassword($this->_password);
             }
-            $this->_password = '';
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public function postSave($success)
+        {
+            if ($success) {
+                $this->_password = null;
+            }
         }
 
         /**
@@ -94,20 +101,7 @@
             if ($key === 'password') {
                 return null;
             } else {
-                if (array_key_exists($key, $this->data)) {
-                    return $this->data[$key];
-                } else {
-                    if (array_key_exists($key, $this->_additional)) {
-                        return $this->_additional[$key];
-                    } else {
-                        $attributes = $this->getAttributes();
-                        if (array_key_exists($key, $attributes)) {
-                            return $attributes[$key];
-                        } else {
-                            return null;
-                        }
-                    }
-                }
+                return parent::get($key);
             }
         }
 
@@ -121,7 +115,6 @@
         public function set($key = '', $value = '')
         {
             if ($key === 'password') {
-                $this->_different = true;
                 $this->_password = $value;
             } else {
                 parent::set($key, $value);
@@ -153,5 +146,4 @@
             }
             return $this->getResource('encoder');
         }
-
     }

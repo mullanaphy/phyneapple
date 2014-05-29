@@ -14,5 +14,5 @@
      * to license@phyneapple.com so we can send you a copy immediately.
      *
      */
-    $loader = require_once __DIR__.'/../vendor/autoload.php';
+    $loader = require_once __DIR__ . '/../vendor/autoload.php';
     $loader->add('PHY\\', __DIR__);

@@ -75,6 +75,7 @@
 
         /**
          * {@inheritDoc}
+         * @return \PHY\Database\Mysqli
          */
         public function getDatabase()
         {
@@ -112,16 +113,21 @@
         public function getModel($model)
         {
             $model = '\PHY\Model\\' . str_replace('/', '\\', $model);
-            return new $model;
+            $model = new $model;
+            return $model;
         }
 
         /**
          * {@inheritDoc}
          */
-        public function loadModel($loadBy, $model)
+        public function getCollection($model)
         {
-            $model = $this->getModel($model);
-            return $this->load($loadBy, $model);
+            $modelEntity = '\PHY\Model\\' . $model;
+            self::createTable(new $modelEntity, $this->getDatabase(), $this->getCache());
+            $collection = '\PHY\Model\\' . str_replace('/', '\\', $model) . '\Collection';
+            $collection = new $collection;
+            $collection->setManager($this);
+            return $collection;
         }
 
         /**
@@ -129,6 +135,7 @@
          */
         public function load($loadBy, IEntity $model)
         {
+            $model->preLoad();
             self::createTable($model, $this->getDatabase(), $this->getCache());
             $source = static::parseSource($model);
             $data = false;
@@ -147,19 +154,55 @@
                 if (!is_array($loadBy)) {
                     $loadBy = [$loadBy[$source['id']] => $loadBy];
                 }
+                $where = $query->get('where');
+                $columns = [];
+                foreach ($source['schema'] as $alias => $table) {
+                    foreach ($table['columns'] as $key => $value) {
+                        $columns[$key] = $alias;
+                    }
+                }
                 foreach ($loadBy as $key => $value) {
-                    $query->where->field($key, $value);
+                    if (is_array($value)) {
+                        if (isset($columns[$key])) {
+                            $where->field($key, $columns[$key])->in($value);
+                        } else {
+                            $start = 0;
+                            foreach ($value as $k => $v) {
+                                if (isset($columns[$k])) {
+                                    if (!$start++) {
+                                        if (is_array($v)) {
+                                            $where->field($k, $columns[$k])->in($v);
+                                        } else {
+                                            $where->field($k, $columns[$k])->is($v);
+                                        }
+                                    } else {
+                                        if (is_array($v)) {
+                                            $where->instead($k, $columns[$k])->in($v);
+                                        } else {
+                                            $where->instead($k, $columns[$k])->is($v);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    } else if (isset($columns[$key])) {
+                        $where->field($key, $columns[$key])->is($value);
+                    }
                 }
                 $query->execute();
                 $data = $query->getIterator()->fetch_assoc();
             }
             if ($data) {
-                $model->set($data);
+                $success = true;
+                $model->setInitialData($data);
                 if ($cacheable && $model->exists()) {
                     $this->getCache()
-                        ->set(self::getCacheKey($source['name'], $model->id), $model, $source['cacheable']);
+                        ->set(self::getCacheKey($source['name'], $model->id()), $model, $source['cacheable']);
                 }
+            } else {
+                $success = false;
             }
+            $model->postLoad($success);
             return $model;
         }
 
@@ -168,11 +211,14 @@
          */
         public function save(IEntity $model)
         {
+            $model->preSave();
             if ($model->exists()) {
-                return $this->update($model);
+                $success = $this->update($model);
             } else {
-                return $this->insert($model);
+                $success = $this->insert($model);
             }
+            $model->postSave($success);
+            return $success;
         }
 
         /**
@@ -180,29 +226,40 @@
          */
         public function update(IEntity $model)
         {
-            $db = $this->getDatabase();
-            self::createTable($model, $db, $this->getCache());
-            $data = $model->getChanged();
-            $source = self::parseSource($model);
-            $primary_id = $data[$source['id']];
-            $query = $this->createQuery();
-            $db->transaction();
-            try {
-                foreach ($source['tables'] as $alias => $table) {
-                    $query->update()->find([
-                        $alias === 'primary'
-                            ? $primary_id
-                            : 'primary_id' => $primary_id
-                    ])->source($table)->set($data)->execute();
-                }
-                $db->commit();
-                $db->transaction(false);
-            } catch (Exception $exception) {
-                $db->rollback();
-                $db->transaction(false);
+            $model->preLoad();
+            if (!$model->isDifferent()) {
                 return false;
             }
-            return true;
+            $db = $this->getDatabase();
+            self::createTable($model, $db, $this->getCache());
+            $source = self::parseSource($model);
+            $cacheable = $source['cacheable'] && $this->getCache() !== null;
+            $success = true;
+            try {
+                $db->autocommit(false);
+                foreach ($source['schema'] as $alias => $table) {
+                    $query = $this->createQuery()->updateFromModel($model, $alias);
+                    if ($query) {
+                        if (!$query->execute()) {
+                            throw new \Exception('Abra Cadabra.');
+                        }
+                    }
+                }
+                $db->commit();
+                $db->autocommit(true);
+            } catch (\Exception $exception) {
+                $db->rollback();
+                $db->autocommit(true);
+                $success = false;
+            }
+            if ($success) {
+                if ($cacheable && $model->exists()) {
+                    $this->getCache()
+                        ->set(self::getCacheKey($source['name'], $model->id()), $model, $source['cacheable']);
+                }
+            }
+            $model->postLoad($success);
+            return $success;
         }
 
         /**
@@ -210,27 +267,40 @@
          */
         public function insert(IEntity $model)
         {
-            self::createTable($model, $this->getDatabase(), $this->getCache());
-            $data = $model->toArray();
+            $model->preInsert();
+            if ($model->exists()) {
+                return false;
+            }
+            $db = $this->getDatabase();
+            self::createTable($model, $db, $this->getCache());
             $source = self::parseSource($model);
-            $newId = 0;
-            $query = $this->createQuery();
-            $query->transaction();
+            $cacheable = $source['cacheable'] && $this->getCache() !== null;
+            $success = true;
             try {
-                foreach ($source['tables'] as $alias => $table) {
-                    $insertId = $query->insert()->source($table)->set($data)->execute();
-                    if ($alias === 'primary') {
-                        $newId = $insertId;
+                $db->autocommit(false);
+                foreach ($source['schema'] as $alias => $table) {
+                    $query = $this->createQuery()->insertFromModel($model, $alias);
+                    if ($query) {
+                        if (!$query->getIterator()) {
+                            throw new \Exception('Abra Cadabra.');
+                        }
                     }
                 }
-                $query->commit();
-                $query->transaction(false);
-            } catch (Exception $exception) {
-                $query->rollback();
-                $query->transaction(false);
-                return 0;
+                $db->commit();
+                $db->autocommit(true);
+            } catch (\Exception $exception) {
+                $db->rollback();
+                $db->autocommit(true);
+                $success = false;
             }
-            return $newId;
+            if ($success) {
+                if ($cacheable && $model->exists()) {
+                    $this->getCache()
+                        ->set(self::getCacheKey($source['name'], $model->id()), $model, $source['cacheable']);
+                }
+            }
+            $model->postInsert($success);
+            return $success;
         }
 
         /**
@@ -238,17 +308,40 @@
          */
         public function delete(IEntity $model)
         {
-            self::createTable($model, $this->getDatabase(), $this->getCache());
-            $id = $model->id;
-            $database = $this->getDatabase();
-            $source = self::parseSource($model);
-            foreach ($source['table'] as $alias => $table) {
-                $database->getCollection($table['table'])->find([
-                    $alias === 'primary'
-                        ? $source['id']
-                        : 'primary_id' => $id
-                ]);
+            $model->preDelete();
+            if (!$model->exists()) {
+                return false;
             }
+            $db = $this->getDatabase();
+            self::createTable($model, $db, $this->getCache());
+            $source = self::parseSource($model);
+            $cacheable = $source['cacheable'] && $this->getCache() !== null;
+            $success = true;
+            try {
+                $db->autocommit(false);
+                foreach ($source['schema'] as $alias => $table) {
+                    $query = $this->createQuery()->deleteFromModel($model, $alias);
+                    if ($query) {
+                        if (!$query->execute()) {
+                            throw new \Exception('Abra Cadabra.');
+                        }
+                    }
+                }
+                $db->commit();
+                $db->autocommit(true);
+            } catch (\Exception $exception) {
+                $db->rollback();
+                $db->autocommit(true);
+                $success = false;
+            }
+            if ($success) {
+                if ($cacheable && $model->exists()) {
+                    $this->getCache()
+                        ->set(self::getCacheKey($source['name'], $model->id()), $model, $source['cacheable']);
+                }
+            }
+            $model->postDelete($success);
+            return $success;
         }
 
         /**
@@ -308,6 +401,22 @@
                             }
                             if (!array_key_exists($id, $keys['local'])) {
                                 $keys['local'][$id] = 'PRIMARY KEY (`' . $id . '`)';
+                            }
+                            foreach ($keys['local'] as $key => $index) {
+                                switch ($index) {
+                                    case 'unique':
+                                        $keys['local'][$key] = 'UNIQUE INDEX (`' . $key . '`)';
+                                        break;
+                                    case 'index':
+                                        $keys['local'][$key] = 'INDEX (`' . $key . '`)';
+                                        break;
+                                    case 'fulltext':
+                                        $keys['local'][$key] = 'FULLTEXT(`' . $key . '`)';
+                                        break;
+                                    case 'spatial':
+                                        $keys['local'][$key] = 'SPATIAL INDEX(`' . $key . '`)';
+                                        break;
+                                }
                             }
                             foreach ($table['columns'] as $key => $type) {
                                 $fields[$key] = '`' . $key . '` ' . self::getFieldType($type);

@@ -20,6 +20,7 @@
     use PHY\Http\IRequest;
     use PHY\Http\IResponse;
     use PHY\View\ILayout;
+    use PHY\App;
 
     /**
      * Interface for Controllers.
@@ -84,6 +85,21 @@
          * @return IController
          */
         public function setLayout(ILayout $layout);
+
+        /**
+         * Inject our app.
+         *
+         * @param App $app
+         * @return IController
+         */
+        public function setApp(App $app);
+
+        /**
+         * Get our app.
+         *
+         * @return App
+         */
+        public function getApp();
 
         /**
          * GET /{:controller}/index

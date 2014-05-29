@@ -21,15 +21,24 @@
      * @var $this \PHY\View\Block
      */
 ?>
-<div class="footer">
-    <div class="container">&copy; <?=isset($title)?$title:'Ha Ha No Site Name! Suck It!'?> 2013</div>
+<div class="container">
+    <footer>
+        <hr/>
+        <p><?=
+                isset($copyright)
+                    ? $copyright
+                    : 'Ha Ha No Site Name! Suck It!' ?></p>
+    </footer>
 </div>
 <?php
-    if(isset($js)):
+    if (isset($js)):
         $tag = $this->tag();
         foreach ($js as $file):
             echo $tag->script->attributes($file);
         endforeach;
     endif
 ?>
-<script type="text/javascript">try{if(typeof console!=='undefined'&&typeof console.log!=='undefined')console.log('Generation: <?=$app->getDebugger()->profile()?>');}catch(e){}</script>
+<script type="text/javascript">try {
+        if (typeof console !== 'undefined' && typeof console.log !== 'undefined')console.log('Generation: <?=$app->getDebugger()->profile()?>');
+    } catch (e) {
+    }</script>

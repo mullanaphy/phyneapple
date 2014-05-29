@@ -17,6 +17,8 @@
 
     namespace PHY\Controller;
 
+    use PHY\Model\User;
+
     /**
      * Default login controller.
      *
@@ -35,7 +37,7 @@
         public function index_get()
         {
             if ($this->getApp()->getUser()->exists()) {
-                $this->redirect('');
+                $this->redirect('/');
             }
         }
 
@@ -45,29 +47,45 @@
         public function index_post()
         {
             $request = $this->getRequest();
-            if (!$request->get('username') || !$request->get('password')) {
+            $username = $request->get('username', false);
+            $password = $request->get('password', false);
+            $layout = $this->getLayout();
+            $content = $layout->block('content');
+            $content->setVariable('username', $username);
+            if (!$username || !$password) {
                 $this->index_get();
-                $this->getLayout()->addVariables('error', [
-                    'template' => 'user/login/error.phtml',
+                $content->setChild('error', [
+                    'template' => 'generic/message/error.phtml',
                     'message' => 'Please enter your Username and\or Password, then try again.',
                     'type' => 'error'
                 ]);
             } else {
                 $app = $this->getApp();
-                $user = $app->get('model/user');
-                $user->login($request->get('username'), $request->get('password'));
-                if (!$user->isDeleted()) {
+                /* @var \PHY\Database\IDatabase $database */
+                $database = $app->get('database');
+                $manager = $database->getManager();
+                /* @var \PHY\Model\IUser $user */
+                $user = $manager->load([
+                    [
+                        'username' => $username,
+                        'email' => $username
+                    ]
+                ], new User);
+                if ($user->exists() && $user->checkPassword($password)) {
                     $this->getApp()->set('session/user', $user->toArray());
-                    $redirect = $app->delete('session/_redirect');
+                    $redirect = $app->get('session/_redirect');
+                    $app->delete('session/_redirect');
                     if (!$redirect) {
-                        $redirect = '';
+                        $redirect = '/';
                     }
                     $this->redirect($redirect);
                 } else {
                     $this->index_get();
-                    $this->getLayout()->addVariables('error', [
-                        'template' => 'user/login/error.phtml',
-                        'message' => 'Invalid Username and\or Password. Please try again.',
+                    $content->setChild('error', [
+                        'template' => 'generic/message/error.phtml',
+                        'message' => !$user->exists()
+                            ? 'Username ' . $username . ' was not found. Please try again.'
+                            : 'Wrong password...',
                         'type' => 'error'
                     ]);
                 }

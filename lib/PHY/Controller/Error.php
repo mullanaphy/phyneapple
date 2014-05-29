@@ -17,6 +17,9 @@
 
     namespace PHY\Controller;
 
+    use PHY\App;
+    use PHY\Http\Exception as HttpException;
+
     /**
      * Home page.
      *
@@ -26,19 +29,21 @@
      * @license http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
      * @author John Mullanaphy <john@jo.mu>
      */
-    class Error extends \PHY\Controller\AController
+    class Error extends AController
     {
 
         protected $message = 'Sorry, seems like some stuff broke... Please don\'t judge me harshly...';
         protected $statusCode = 500;
+        protected $exception = null;
 
         /**
          * {@inheritDoc}
          */
-        public function __construct(\PHY\App $app = null)
+        public function __construct(App $app = null)
         {
             parent::__construct($app);
-            $this->getLayout()->loadBlocks('default', 'error');
+            $layout = $this->getLayout();
+            $layout->loadBlocks('default', 'error');
         }
 
         /**
@@ -55,9 +60,9 @@
 
             /* See which route we should go with, depending on whether those methods exist or not. */
             $actions = [
-                $action.'_'.$request->getMethod(),
-                $action.'_get',
-                'index_'.$request->getMethod()
+                $action . '_' . $request->getMethod(),
+                $action . '_get',
+                'index_' . $request->getMethod()
             ];
             $action = 'index_get';
             foreach ($actions as $check) {
@@ -74,7 +79,7 @@
          * Set our error message.
          *
          * @param string $message
-         * @return \PHY\Controller\Error
+         * @return $this
          */
         public function setMessage($message = '')
         {
@@ -93,10 +98,32 @@
         }
 
         /**
+         * Set our exception.
+         *
+         * @param \Exception $exception
+         * @return $this
+         */
+        public function setException(\Exception $exception)
+        {
+            $this->exception = $exception;
+            return $this;
+        }
+
+        /**
+         * Get our exception.
+         *
+         * @return \Exception
+         */
+        public function getException()
+        {
+            return $this->exception;
+        }
+
+        /**
          * Set our status code.
          *
          * @param int $statusCode
-         * @return \PHY\Controller\Error
+         * @return $this
          */
         public function setStatusCode($statusCode = 500)
         {
@@ -117,13 +144,14 @@
         /**
          * Report a HTTP exception.
          *
-         * @param \PHY\Exception\HTTP $exception
-         * @return \PHY\Controller\Error
+         * @param HttpException $exception
+         * @return $this
          */
-        public function httpException(\PHY\Exception\HTTP $exception)
+        public function httpException(HttpException $exception)
         {
             $this->setMessage($exception->getMessage());
             $this->setStatusCode($exception->getStatusCode());
+            $this->setException($exception);
             return $this;
         }
 
@@ -133,7 +161,11 @@
         public function index_get()
         {
             $this->getResponse()->setStatusCode($this->getStatusCode());
-            $this->getLayout()->block('content')->setVariable('title', 'Sour Hour!')->setVariable('message', $this->getMessage())->setVariable('template', 'generic/message.phtml');
+            $layout = $this->getLayout();
+            $layout->block('layout')->setTemplate('core/layout-1col.phtml');
+            $layout->block('content')->setVariable('title', 'Sour Hour!');
+            $layout->block('error/exception')->setVariable('exception', $this->getException());
+            $layout->block('error/message')->setVariable('message', $this->getMessage());
         }
 
     }

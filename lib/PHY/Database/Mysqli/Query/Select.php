@@ -37,6 +37,14 @@
         /**
          * {@inheritDoc}
          */
+        public function reset()
+        {
+            $this->select = [];
+        }
+
+        /**
+         * {@inheritDoc}
+         */
         public function count($field = '*', $alias = '')
         {
             $alias = $alias && is_string($alias)

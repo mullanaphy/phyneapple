@@ -65,7 +65,7 @@
         /**
          * Get an array with all combos of paths to routes.
          *
-         * @param string[,...] $path
+         * @param string [,...] $path
          * @return array
          */
         public function getPaths()
@@ -74,6 +74,9 @@
             $routes = $this->getRoutes();
             $paths = [];
             foreach ($sources as $source) {
+                if (is_array($source)) {
+
+                }
                 foreach ($routes as $route => $path) {
                     $paths[$route . DIRECTORY_SEPARATOR . $source] = $path . $source;
                 }

@@ -32,7 +32,6 @@
     class Where extends Element implements IWhere
     {
 
-        protected $where = [];
         protected $current = [];
 
         /**
@@ -40,12 +39,12 @@
          */
         public function also($field, $alias = false)
         {
-            if (!$this->checkForValue()) {
-
-            }
-            $this->current[] = [
-                'field' => $this->clean($field),
-                'alias' => $alias,
+            $location = $this->location();
+            $this->current[$location[0]][] = [
+                'field' => $this->clean($field, true),
+                'alias' => $alias
+                    ? $this->clean($alias, true)
+                    : false,
                 'value' => null,
                 'or' => false
             ];
@@ -56,13 +55,12 @@
          */
         public function field($field, $alias = false)
         {
-            if (!$this->checkForValue()) {
-
-            }
-            $this->current = [
+            $this->current[] = [
                 [
-                    'field' => $this->clean($field),
-                    'alias' => $alias,
+                    'field' => $this->clean($field, true),
+                    'alias' => $alias
+                        ? $this->clean($alias, true)
+                        : false,
                     'value' => null,
                     'or' => false
                 ]
@@ -76,7 +74,8 @@
         public function gt($value)
         {
             $this->throwExceptionForImproperChaining();
-            $this->current[count($this->current) - 1]['value'] = ' > ' . $this->clean($value);
+            $location = $this->location();
+            $this->current[$location[0]][$location[1]]['value'] = ' > ' . $this->clean($value);
             return $this;
         }
 
@@ -86,7 +85,8 @@
         public function gte($value)
         {
             $this->throwExceptionForImproperChaining();
-            $this->current[count($this->current) - 1]['value'] = ' >= ' . $this->clean($value);
+            $location = $this->location();
+            $this->current[$location[0]][$location[1]]['value'] = ' >= ' . $this->clean($value);
             return $this;
         }
 
@@ -96,7 +96,8 @@
         public function in(array $value)
         {
             $this->throwExceptionForImproperChaining();
-            $this->current[count($this->current) - 1]['value'] = ' IN (' . implode(',', array_map([
+            $location = $this->location();
+            $this->current[$location[0]][$location[1]]['value'] = ' IN (' . implode(',', array_map([
                     $this,
                     'clean'
                 ], $value)) . ")";
@@ -109,7 +110,8 @@
         public function notIn(array $value)
         {
             $this->throwExceptionForImproperChaining();
-            $this->current[count($this->current) - 1]['value'] = ' NOT IN (' . implode(',', array_map([
+            $location = $this->location();
+            $this->current[$location[0]][$location[1]]['value'] = ' NOT IN (' . implode(',', array_map([
                     $this,
                     'clean'
                 ], $value)) . ")";
@@ -121,14 +123,14 @@
          */
         public function instead($field, $alias = false)
         {
-            if (!$this->checkForValue()) {
-
-            }
-            $this->current[] = [
-                'field' => $field,
-                'alias' => $alias,
-                'or' => true,
-                'value' => null
+            $location = $this->location();
+            $this->current[$location[0]][] = [
+                'field' => $this->clean($field, true),
+                'alias' => $alias
+                    ? $this->clean($alias, true)
+                    : false,
+                'value' => null,
+                'or' => true
             ];
             return $this;
         }
@@ -139,7 +141,8 @@
         public function is($value)
         {
             $this->throwExceptionForImproperChaining();
-            $this->current[count($this->current) - 1]['value'] = ' = ' . $this->clean($value);
+            $location = $this->location();
+            $this->current[$location[0]][$location[1]]['value'] = ' = ' . $this->clean($value);
             return $this;
         }
 
@@ -149,7 +152,8 @@
         public function like($value)
         {
             $this->throwExceptionForImproperChaining();
-            $this->current[count($this->current) - 1]['value'] = ' LIKE ' . $this->clean($value);
+            $location = $this->location();
+            $this->current[$location[0]][$location[1]]['value'] = ' LIKE ' . $this->clean($value);
             return $this;
         }
 
@@ -159,7 +163,8 @@
         public function lt($value)
         {
             $this->throwExceptionForImproperChaining();
-            $this->current[count($this->current) - 1]['value'] = ' < ' . $this->clean($value);
+            $location = $this->location();
+            $this->current[$location[0]][$location[1]]['value'] = ' < ' . $this->clean($value);
             return $this;
         }
 
@@ -169,7 +174,8 @@
         public function lte($value)
         {
             $this->throwExceptionForImproperChaining();
-            $this->current[count($this->current) - 1]['value'] = ' <= ' . $this->clean($value);
+            $location = $this->location();
+            $this->current[$location[0]][$location[1]]['value'] = ' <= ' . $this->clean($value);
             return $this;
         }
 
@@ -179,7 +185,8 @@
         public function not($value)
         {
             $this->throwExceptionForImproperChaining();
-            $this->current[count($this->current) - 1]['value'] = ' != ' . $this->clean($value);
+            $location = $this->location();
+            $this->current[$location[0]][$location[1]]['value'] = ' != ' . $this->clean($value);
             return $this;
         }
 
@@ -189,7 +196,8 @@
         public function notLike($value)
         {
             $this->throwExceptionForImproperChaining();
-            $this->current[count($this->current) - 1]['value'] = ' NOT LIKE ' . $this->clean($value);
+            $location = $this->location();
+            $this->current[$location[0]][$location[1]]['value'] = ' NOT LIKE ' . $this->clean($value);
             return $this;
         }
 
@@ -199,7 +207,8 @@
         public function range($start, $finish)
         {
             $this->throwExceptionForImproperChaining();
-            $this->current[count($this->current) - 1]['value'] = ' BETWEEN(' . $this->clean($start) . ',' . $this->clean($finish) . ')';
+            $location = $this->location();
+            $this->current[$location[0]][$location[1]]['value'] = ' BETWEEN(' . $this->clean($start) . ',' . $this->clean($finish) . ')';
             return $this;
         }
 
@@ -209,19 +218,22 @@
         public function toArray()
         {
             $complete = [];
-            foreach ($this->where as $group) {
-                $first = array_shift($group);
-                $field = $first['alias']
-                    ? '`' . $this->clean($first['alias']) . '`.`' . $this->clean($first['field']) . '`'
-                    : '`' . $this->clean($first['field']) . '`';
-                $set = $field . $first['value'];
-                foreach ($group as $part) {
-                    $field = $part['alias']
-                        ? '`' . $this->clean($part['alias']) . '`.`' . $this->clean($part['field']) . '`'
-                        : '`' . $this->clean($part['field']) . '`';
-                    $set .= " " . ($part['or']
-                            ? 'OR'
-                            : 'AND') . ' ' . $field . $part['value'];
+            foreach ($this->current as $group) {
+                if (is_array($group)) {
+                    $first = array_shift($group);
+                    $set = ($first['alias']
+                            ? $first['alias'] . '.'
+                            : '') . $first['field'] . $first['value'];
+                    foreach ($group as $part) {
+                        $field = ($part['alias']
+                                ? $part['alias'] . '.'
+                                : '') . $part['field'];
+                        $set .= ' ' . ($part['or']
+                                ? 'OR'
+                                : 'AND') . ' ' . $field . $part['value'];
+                    }
+                } else {
+                    $set = $group;
                 }
                 $complete[] = $set;
             }
@@ -241,7 +253,7 @@
          */
         public function toString()
         {
-            if ($this->where) {
+            if ($this->current) {
                 return ' WHERE (' . implode(') AND (', $this->toArray()) . ') ';
             } else {
                 return ' ';
@@ -253,8 +265,8 @@
          */
         protected function checkForField()
         {
-            $current = end($this->current);
-            return (bool)$current['field'];
+            $location = $this->location();
+            return (bool)$this->current[$location[0]][$location[1]]['field'];
         }
 
         /**
@@ -262,8 +274,8 @@
          */
         protected function checkForValue()
         {
-            $current = end($this->current);
-            return $current['value'] !== null;
+            $location = $this->location();
+            return $this->current[$location[0]][$location[1]]['value'] !== null;
         }
 
         /**
@@ -272,12 +284,19 @@
         protected function throwExceptionForImproperChaining()
         {
             if (!$this->checkForField()) {
-                throw new Exception('');
+                throw new Exception('Cannot chain a matching based method without a defined field.');
             } else {
                 if ($this->checkForValue()) {
-                    throw new Exception('');
+                    throw new Exception('We already have a match set, please set another field.');
                 }
             }
+        }
+
+        protected function location()
+        {
+            $outer = count($this->current) - 1;
+            $inner = count($this->current[$outer]) - 1;
+            return [$outer, $inner];
         }
 
         /**
@@ -285,7 +304,7 @@
          */
         public function raw($string)
         {
-            $this->where[] = $string;
+            $this->current[] = $string;
             return $this;
         }
 

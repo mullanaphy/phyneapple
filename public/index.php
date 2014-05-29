@@ -17,7 +17,7 @@
 
     namespace PHY;
 
-    require '..'.DIRECTORY_SEPARATOR.'vendor'.DIRECTORY_SEPARATOR.'autoload.php';
+    require '..' . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'autoload.php';
 
     call_user_func(function () {
         /*
@@ -29,29 +29,21 @@
         }
 
         /*
+         * Initiate a new request from global values.
+         * @var \PHY\Http\Request $request
+         */
+        $request = Http\Request::createFromGlobal();
+
+        /*
          * Setup our app, add a debugger, and start profiling.
          */
         $app = new App;
-        $app->setRootDirectory(dirname(dirname(__FILE__)).DIRECTORY_SEPARATOR);
-        $app->setPublicDirectory(dirname(__FILE__).DIRECTORY_SEPARATOR);
+        $app->setRootDirectory($request->getEnvironmental('PHY_ROOT', dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR));
+        $app->setPublicDirectory($request->getEnvironmental('PHY_PUBLIC', dirname(__FILE__) . DIRECTORY_SEPARATOR));
 
         $debugger = new Debugger;
         $debugger->profile(true);
         $app->setDebugger($debugger);
-
-        /*
-         * Initiate a new request from global values.
-         */
-        $request = HTTP\Request::createFromGlobal();
-
-        /*
-         * Now add a path object for routing files.
-         */
-        $path = new Path([
-            'root' => $app->getRootDirectory(),
-            'public' => $app->getPublicDirectory()
-        ]);
-        $app->setPath($path);
 
         /*
          * Setup our site and debugging.
@@ -70,8 +62,3 @@
          */
         $app->render($request);
     });
-
-
-
-
-

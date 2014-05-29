@@ -114,35 +114,33 @@
         /**
          * Add some spaces on the ends pre save.
          *
-         * @return array Response array.
+         * {@inheritDoc}
          */
         public function preSave()
         {
             $this->set('allow', ' ' . $this->get('allow') . ' ');
             $this->set('deny', ' ' . $this->get('deny') . ' ');
-            return $this;
         }
 
         /**
          * Remove some spaces post save.
          *
-         * @return $this
+         * {@inheritDoc}
          */
-        public function postSave()
+        public function postSave($success)
         {
             $this->set('allow', trim($this->get('allow')));
             $this->set('deny', trim($this->get('deny')));
-            return $this;
         }
 
         /**
          * Remove some spaces post load.
          *
-         * @return $this
+         * {@inheritDoc}
          */
-        public function postLoad()
+        public function postLoad($success)
         {
-            return $this->postSave();
+            $this->postSave($success);
         }
 
         /**

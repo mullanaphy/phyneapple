@@ -41,9 +41,9 @@
             if ($this->time === null || $reset) {
                 $this->time = microtime(true);
                 $this->memory = memory_get_usage();
-                return 'Started at '.$this->time.' using '.self::parseBytes(memory_get_usage());
+                return 'Started at ' . $this->time . ' using ' . self::parseBytes(memory_get_usage());
             } else {
-                return (string)(round(microtime(true) - $this->time, 5)).' using '.self::parseBytes(memory_get_usage() - $this->memory).' of '.self::parseBytes(memory_get_usage());
+                return (string)(round(microtime(true) - $this->time, 5)) . ' using ' . self::parseBytes(memory_get_usage() - $this->memory) . ' of ' . self::parseBytes(memory_get_usage());
             }
         }
 
@@ -65,7 +65,7 @@
             }
             $size = abs($size);
             $units = array('b', 'kb', 'mb', 'gb', 'tb', 'pb');
-            return ($sign * (round($size / pow(1024, ($i = (int)floor(log($size, 1024)))), 2))).' '.$units[$i];
+            return ($sign * (round($size / pow(1024, ($i = (int)floor(log($size, 1024)))), 2))) . ' ' . $units[$i];
         }
 
     }

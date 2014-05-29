@@ -44,11 +44,8 @@
             }
             if (!array_key_exists($key, $this->resources[$namespace])) {
                 $file = false;
-
-                $paths = $this
-                    ->getApp()
-                    ->getPath()
-                    ->getPaths('config'.DIRECTORY_SEPARATOR.$namespace.DIRECTORY_SEPARATOR.$key.'.json', 'config'.DIRECTORY_SEPARATOR.'default'.DIRECTORY_SEPARATOR.$key.'.json');
+                $paths = $this->getApp()->getPath()
+                    ->getPaths('config' . DIRECTORY_SEPARATOR . $namespace . DIRECTORY_SEPARATOR . $key . '.json', 'config' . DIRECTORY_SEPARATOR . 'default' . DIRECTORY_SEPARATOR . $key . '.json');
                 foreach ($paths as $check) {
                     if (is_readable($check)) {
                         $file = $check;
@@ -56,7 +53,7 @@
                     }
                 }
                 if (!$file) {
-                    throw new Exception('Config "'.$key.'" was not found.');
+                    throw new Exception('Config "' . $key . '" was not found.');
                 }
                 $FILE = fopen($file, 'r');
                 $content = fread($FILE, filesize($file));

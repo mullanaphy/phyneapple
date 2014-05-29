@@ -37,46 +37,26 @@
         private $results = null;
         private $string = '';
 
+        public function __clone()
+        {
+            foreach ($this->elements as $key => $element) {
+                $this->elements[$key] = clone $element;
+            }
+            $this->results = null;
+            $this->string = '';
+        }
+
         /**
          * {@inheritDoc}
          */
         public function __construct(IManager $manager = null, IEntity $model = null)
         {
-            $this->elements = static::getElements();
             if ($manager !== null) {
                 $this->setManager($manager);
             }
             if ($model !== null) {
                 $this->setModel($model);
             }
-        }
-
-        /**
-         * Create a SELECT query based on a model.
-         *
-         * @param IEntity $model
-         * @return $this
-         */
-        public function selectFromModel(IEntity $model)
-        {
-            $this->setModel($model);
-            /* @var Query\From $from */
-            $from = $this->get('from');
-            /* @var Query\Select $select */
-            $select = $this->get('select');
-            $source = $model->getSource();
-            foreach ($source['schema'] as $alias => $table) {
-                if ($alias === 'primary') {
-                    $from->from($table['table'], $alias);
-                } else {
-                    $from->leftJoin($table['table'], $alias, array_key_exists('mapping', $table)
-                        ? $table['mapping']
-                        : null);
-                }
-                $select->field('*', $alias);
-            }
-
-            return $this;
         }
 
         /**
@@ -88,15 +68,29 @@
          */
         public function get($object)
         {
-            if (array_key_exists($object, $this->elements)) {
+            if ($this->elements === null) {
+                $this->select();
+            }
+            if ($this->has($object)) {
                 if (is_object($this->elements[$object])) {
                     return $this->elements[$object];
                 } else {
                     throw new Exception('"' . $object . '" is not an object... I am blaming you...');
                 }
             } else {
-                throw new Exception('"' . $object . '" is undefined. Available calls are "' . implode('", "', $this->elements) . '".');
+                throw new Exception('"' . $object . '" is undefined. Available calls are "' . implode('", "', array_keys($this->elements)) . '".');
             }
+        }
+
+        /**
+         * Let us know if this query has a specific element.
+         *
+         * @param string $object
+         * @return bool
+         */
+        public function has($object)
+        {
+            return array_key_exists($object, $this->elements);
         }
 
         /**
@@ -138,28 +132,30 @@
         }
 
         /**
-         * Grab default elements.
-         *
-         * @return array
-         */
-        protected static function getElements()
-        {
-            return [
-                'select' => new Query\Select,
-                'from' => new Query\From,
-                'where' => new Query\Where,
-                'having' => new Query\Having,
-                'order' => new Query\Order
-            ];
-        }
-
-        /**
          * {@inheritDoc}
          */
         public function execute()
         {
             if ($this->results === null) {
-                $this->results = $this->getManager()->getDatabase()->query($this->toString());
+                if ($this->has('bind')) {
+                    $prepare = $this->getManager()->getDatabase()->prepare($this->toString());
+                    $bind = $this->get('bind')->toArray();
+                    $bound = [];
+                    foreach ($bind as $key => $value) {
+                        if ($key > 0) {
+                            $bound[$key] = & $bind[$key];
+                        } else {
+                            $bound[$key] = $value;
+                        }
+                    }
+                    call_user_func_array([$prepare, 'bind_param'], $bound);
+                    $this->results = $prepare->execute();
+                } else {
+                    $this->results = $this->getManager()->getDatabase()->query($this->toString());
+                }
+                if (!$this->results) {
+                    $this->results = [];
+                }
             }
             return $this;
         }
@@ -197,6 +193,219 @@
                 $element->setModel($model);
             }
             return $this;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public function select()
+        {
+            $this->elements = [
+                'select' => new Query\Select,
+                'from' => new Query\From,
+                'where' => new Query\Where,
+                'having' => new Query\Having,
+                'order' => new Query\Order,
+                'limit' => new Query\Limit
+            ];
+            $this->injectManagerAndModel();
+            return $this;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public function update()
+        {
+            $this->elements = [
+                'update' => new Query\Update,
+                'where' => new Query\Where,
+                'limit' => new Query\Limit,
+                'bind' => new Query\Bind
+            ];
+            $this->injectManagerAndModel();
+            return $this;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public function delete()
+        {
+            $this->elements = [
+                'delete' => new Query\Delete,
+                'from' => new Query\From,
+                'where' => new Query\Where,
+                'limit' => new Query\Limit
+            ];
+            $this->injectManagerAndModel();
+            return $this;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public function insert()
+        {
+            $this->elements = [
+                'insert' => new Query\Insert,
+                'bind' => new Query\Bind
+            ];
+            $this->injectManagerAndModel();
+            return $this;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public function upsert()
+        {
+            $this->elements = [
+                'upsert' => new Query\Upsert,
+                'limit' => new Query\Limit,
+                'bind' => new Query\Bind
+            ];
+            $this->injectManagerAndModel();
+            return $this;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public function selectFromModel(IEntity $model)
+        {
+            $this->select();
+            $this->setModel($model);
+            /* @var Query\From $from */
+            $from = $this->get('from');
+            /* @var Query\Select $select */
+            $select = $this->get('select');
+            $source = $model->getSource();
+            foreach ($source['schema'] as $alias => $table) {
+                if ($alias === 'primary') {
+                    $from->from($table['table'], $alias);
+                } else {
+                    $from->leftJoin($table['table'], $alias, array_key_exists('mapping', $table)
+                        ? $table['mapping']
+                        : null);
+                }
+                $select->field('*', $alias);
+            }
+            return $this;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public function deleteFromModel(IEntity $model, $alias = 'primary')
+        {
+            $this->delete();
+            $this->setModel($model);
+            /* @var Query\From $from */
+            $from = $this->get('from');
+            /* @var Query\Where $where */
+            $where = $this->get('where');
+            $source = $model->getSource();
+            $table = $source['schema'][$alias];
+            $from->from($table['table']);
+            $where->field($alias === 'primary'
+                ? $model->getPrimaryKey()
+                : 'primary_id')->is($model->id());
+            return $this;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public function insertFromModel(IEntity $model, $alias = 'primary')
+        {
+            $this->insert();
+            $this->setModel($model);
+            /* @var Query\Insert $insert */
+            $insert = $this->get('insert');
+            /* @var Query\Where $select */
+            /* @var Query\Bind $bind */
+            $bind = $this->get('bind');
+            $source = $model->getSource();
+            $table = $source['schema'][$alias];
+            $insert->table($table['table']);
+            $data = $model->toArray();
+            foreach ($data as $key => $value) {
+                if (array_key_exists($key, $table['columns'])) {
+                    $insert->add($key);
+                    $bind->add($value);
+                }
+            }
+            return $this;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public function updateFromModel(IEntity $model, $alias = 'primary')
+        {
+            $this->update();
+            $this->setModel($model);
+            /* @var Query\Update $update */
+            $update = $this->get('update');
+            /* @var Query\Where $select */
+            $where = $this->get('where');
+            /* @var Query\Bind $bind */
+            $bind = $this->get('bind');
+            $source = $model->getSource();
+            $table = $source['schema'][$alias];
+            $update->table($table['table']);
+            $data = $model->getChanged();
+            foreach ($data as $key => $value) {
+                if (array_key_exists($key, $table['columns'])) {
+                    $update->add($key);
+                    $bind->add($value);
+                }
+            }
+            $where->field($alias === 'primary'
+                ? $model->getPrimaryKey()
+                : 'primary_id', $alias)->is($model->id());
+            return $this;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public function upsertFromModel(IEntity $model)
+        {
+            $this->setModel($model);
+            /* @var Query\From $from */
+            $from = $this->get('from');
+            /* @var Query\Select $select */
+            $select = $this->get('select');
+            $source = $model->getSource();
+            foreach ($source['schema'] as $alias => $table) {
+                if ($alias === 'primary') {
+                    $from->from($table['table'], $alias);
+                } else {
+                    $from->leftJoin($table['table'], $alias, array_key_exists('mapping', $table)
+                        ? $table['mapping']
+                        : null);
+                }
+                $select->field('*', $alias);
+            }
+            return $this;
+        }
+
+        /**
+         * Inject our manager and model objects into elements when we first chose a type.
+         */
+        protected function injectManagerAndModel()
+        {
+            foreach ($this->elements as $element) {
+                /* @var Query\Element $element */
+                if ($this->hasManager()) {
+                    $element->setManager($this->getManager());
+                }
+                if ($this->hasModel()) {
+                    $element->setModel($this->getModel());
+                }
+            }
         }
 
     }

@@ -18,7 +18,6 @@
     namespace PHY\Model;
 
     use PHY\TResources;
-    use PHY\Database\IDatabase;
 
     /**
      * Generic model handling.
@@ -36,7 +35,7 @@
 
         protected $data = [];
         protected $initial = [];
-        protected $_id;
+        protected $_id = null;
         protected static $_source = [
             'schema' => [
                 'primary' => [
@@ -59,28 +58,6 @@
         public function __construct(array $data = [])
         {
             $this->init($data);
-        }
-
-        /**
-         * Handle loadBy{$key}($value) calls.
-         *
-         * @param string $method
-         * @param array $parameters
-         * @return $this
-         */
-        public function __call($method, $parameters)
-        {
-            $method = strtolower($method);
-            if (substr($method, 0, 6) === 'loadby') {
-                $key = str_replace('loadby', '', $method);
-                $value = $parameters[0];
-                $database = (isset($parameters[1]) && $parameters[1] instanceof IDatabase)
-                    ? $parameters[1]
-                    : null;
-                return $this->load([$key => $value], $database);
-            } else {
-                return null;
-            }
         }
 
         /**
@@ -128,32 +105,29 @@
             $initial = [];
             foreach ($this->getSource()['schema'] as $table) {
                 foreach ($table['columns'] as $key => $value) {
-                    if (array_key_exists($key, $data)) {
-                        $initial[$key] = $data[$key];
-                    } else {
-                        switch ($value) {
-                            case 'boolean':
-                                $initial[$key] = false;
-                                break;
-                            case 'id':
-                            case 'int':
-                            case 'tinyint':
-                                $initial[$key] = 0;
-                                break;
-                            case 'decimal':
-                            case 'float':
-                                $initial[$key] = 0.0;
-                                break;
-                            case 'variable':
-                            default:
-                                $initial[$key] = '';
-                                break;
-                        }
+                    switch ($value) {
+                        case 'boolean':
+                            $initial[$key] = false;
+                            break;
+                        case 'id':
+                        case 'int':
+                        case 'tinyint':
+                            $initial[$key] = 0;
+                            break;
+                        case 'decimal':
+                        case 'float':
+                            $initial[$key] = 0.0;
+                            break;
+                        case 'variable':
+                        default:
+                            $initial[$key] = '';
+                            break;
                     }
                 }
             }
-            $this->data = $initial;
             $this->initial = $initial;
+            $this->data = $initial;
+            $this->setInitialData($data);
             return $this;
         }
 
@@ -172,7 +146,10 @@
                     $this->set($k, $v);
                 }
             } else {
-                if (!array_key_exists($key, $this->data)) {
+                $id = $this->getPrimaryKey();
+                if ($key === $id) {
+                    $this->data[$id] = $value;
+                } else if (!array_key_exists($key, $this->data)) {
                     throw new Exception(get_class($this) . ' does not have a key "' . $key . '" defined. Defined keys: "' . join('", "', array_keys($this->data)) . '"');
                 } else {
                     if ($this->data[$key] !== $value) {
@@ -180,6 +157,16 @@
                     }
                 }
             }
+            return $this;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public function setInitialData(array $data = [])
+        {
+            $this->set($data);
+            $this->initial = $this->data;
             return $this;
         }
 
@@ -216,7 +203,8 @@
         public function getCollection()
         {
             $collection = get_class($this) . '\\Collection';
-            return new $collection;
+            $collection = new $collection;
+            return $collection;
         }
 
         /**
@@ -256,6 +244,19 @@
          */
         public function id()
         {
+            $id = $this->getPrimaryKey();
+            return array_key_exists($id, $this->data)
+                ? $this->data[$id]
+                : false;
+        }
+
+        /**
+         * Get our model's id key.
+         *
+         * @return string
+         */
+        public function getPrimaryKey()
+        {
             if ($this->_id === null) {
                 $source = $this->getSource();
                 $id = array_key_exists('id', $source['schema']['primary'])
@@ -263,9 +264,7 @@
                     : 'id';
                 $this->_id = $id;
             }
-            return array_key_exists($this->_id, $this->data)
-                ? $this->data[$this->_id]
-                : false;
+            return $this->_id;
         }
 
         /**
@@ -289,8 +288,11 @@
                 return [];
             }
             $changed = [];
+            $primary_key = $this->getPrimaryKey();
             foreach ($this->data as $key => $value) {
-                if ($value !== $this->initial[$key]) {
+                if ($key === $primary_key) {
+                    continue;
+                } else if ($value !== $this->initial[$key]) {
                     $changed[$key] = $value;
                 }
             }
@@ -317,5 +319,84 @@
             return static::$_source;
         }
 
+        /**
+         * {@inheritDoc}
+         */
+        public function preLoad()
+        {
+
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public function postLoad($success)
+        {
+
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public function preSave()
+        {
+
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public function postSave($success)
+        {
+
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public function preDelete()
+        {
+
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public function postDelete($success)
+        {
+
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public function preInsert()
+        {
+
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public function postInsert($success)
+        {
+
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public function preUpdate()
+        {
+
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public function postUpdate($success)
+        {
+
+        }
     }
 

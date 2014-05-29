@@ -33,7 +33,7 @@
     {
 
         protected $string = '';
-        protected $alias = 'p';
+        protected $alias = false;
         protected $table = [];
 
         /**
@@ -50,9 +50,6 @@
         public function from($table = '', $alias = '')
         {
             $this->string = '';
-            if (!$alias) {
-                $alias = 'primary';
-            }
             $this->table = [
                 $alias => [
                     'table' => $table,
@@ -175,7 +172,9 @@
                     $this->string = ' FROM ';
                     $tables = $this->table;
                     $primary = array_shift($tables);
-                    $this->string .= $this->clean($primary['table'], true) . ' ' . $this->clean($this->alias, true);
+                    $this->string .= $this->clean($primary['table'], true) . ($this->alias
+                            ? ' ' . $this->clean($this->alias, true)
+                            : '');
                     foreach (array_slice($tables, 1) as $alias => $table) {
                         $this->string .= ' ' . strtoupper($table['type']) . ' JOIN ' . $this->clean($table['table'], true) . ' ' . $this->clean($alias, true) . ' ON (' . $table['on'] . ') ';
                     }

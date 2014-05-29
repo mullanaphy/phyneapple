@@ -1,6 +1,7 @@
 <?php
+
     /**
-     * Phyneapple!
+     * PHY
      *
      * LICENSE
      *
@@ -10,28 +11,35 @@
      * http://opensource.org/licenses/osl-3.0.php
      * If you did not receive a copy of the license and are unable to
      * obtain it through the world-wide-web, please send an email
-     * to license@phyneapple.com so we can send you a copy immediately.
+     * to license@kinopio.net so we can send you a copy immediately.
      *
-     * @package PHY
+     */
+
+    namespace PHY\Tests\Model\User;
+
+    use PHY\Model\User\Collection;
+
+    /**
+     * Test our User collection.
+     *
+     * @packagePHY\Tests\Model\User\CollectionTest
      * @category PHY\Phyneapple
      * @copyright Copyright (c) 2013 Phyneapple! (http://www.phyneapple.com/)
      * @license http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
      * @author John Mullanaphy <john@jo.mu>
-     *
-     * @var $this \PHY\View\Block
      */
-?>
-<!DOCTYPE html>
-<html>
-    <head><?=$this->child('head');?></head>
-    <body class="two-column">
-        <?=$this->child('header')?>
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-9"><?=$this->child('content')?></div>
-                <div class="col-lg-3"><?=$this->child('sidebar')?></div>
-            </div>
-        </div>
-        <?=$this->child('footer')?>
-    </body>
-</html>
+    class CollectionTest extends \PHPUnit_Framework_TestCase
+    {
+
+        /**
+         * See if we correctly get back an User model.
+         *
+         * @see \PHY\Model\User\Collection::current();
+         */
+        public function testCurrent()
+        {
+            $collection = new Collection;
+            $this->assertInstanceof('\PHY\Model\User', $collection->getFirstItem());
+        }
+
+    }

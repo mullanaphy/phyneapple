@@ -1,7 +1,7 @@
 {
     "name": "phy/phyneapple",
     "description": "A lightish weight PHP5.4 framework. You have no reason to use it, I just got bored so here it is. Plus it helps for quickly rolling out smaller to medium sized sites.",
-    "keywords": ["phy", "framework", "psr-3"],
+    "keywords": ["phy", "framework", "psr-0"],
     "homepage": "https://github.com/mullanaphy/phyneapple",
     "type": "framework",
     "license": "The Open Software License v3.0",

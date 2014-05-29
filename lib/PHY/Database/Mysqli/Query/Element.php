@@ -61,9 +61,17 @@
         /**
          * {@inheritDoc}
          */
+        public function hasManager()
+        {
+            return $this->manager !== null;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
         public function getManager()
         {
-            if ($this->manager === null) {
+            if (!$this->hasManager()) {
                 throw new Exception('Missing a \PHY\Database\IManager object for our element.');
             }
             return $this->manager;
@@ -81,9 +89,17 @@
         /**
          * {@inheritDoc}
          */
+        public function hasModel()
+        {
+            return $this->model !== null;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
         public function getModel()
         {
-            if ($this->model === null) {
+            if (!$this->hasModel()) {
                 throw new Exception('Missing a \PHY\Model\Entity object for our element.');
             }
             return $this->manager;

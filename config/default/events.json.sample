@@ -1,0 +1,121 @@
+[
+    {
+        "on": "component/cache/load/before",
+        "class": "PHY/Events/Component",
+        "method": "onDatabaseLoadBefore",
+        "recurring": true,
+        "parameters": []
+    },
+    {
+        "on": "component/cache/load/after",
+        "class": "PHY/Events/Component",
+        "method": "onDatabaseLoadAfter",
+        "recurring": false,
+        "parameters": []
+    },
+    {
+        "on": "component/database/load/before",
+        "class": "PHY/Events/Component",
+        "method": "onDatabaseLoadBefore"
+    },
+    {
+        "on": "component/database/load/after",
+        "class": "PHY/Events/Component",
+        "method": "onDatabaseLoadAfter"
+    },
+    {
+        "on": "component/load/before",
+        "class": "PHY/Events/Component",
+        "method": "onLoadBefore"
+    },
+    {
+        "on": "component/load/after",
+        "class": "PHY/Events/Component",
+        "method": "onLoadBefore"
+    },
+    {
+        "on": "controller/action/before",
+        "class": "PHY/Events/Controller",
+        "method": "onActionBefore"
+    },
+    {
+        "on": "controller/action/after",
+        "class": "PHY/Events/Cache",
+        "method": "onActionAfter"
+    },
+    {
+        "on": "controller/request/before",
+        "class": "PHY/Events/Controller",
+        "method": "onRequestBefore"
+    },
+    {
+        "on": "controller/request/after",
+        "class": "PHY/Events/Cache",
+        "method": "onRequestAfter"
+    },
+    {
+        "on": "controller/response/before",
+        "class": "PHY/Events/Controller",
+        "method": "onResponseBefore"
+    },
+    {
+        "on": "controller/response/after",
+        "class": "PHY/Events/Cache",
+        "method": "onResponseAfter"
+    },
+    {
+        "on": "controller/action/before",
+        "class": "PHY/Events/Controller",
+        "method": "onActionBefore"
+    },
+    {
+        "on": "controller/action/after",
+        "class": "PHY/Events/Cache",
+        "method": "onActionAfter"
+    },
+    {
+        "on": "controller/layout/before",
+        "class": "PHY/Events/Controller",
+        "method": "onLayoutBefore"
+    },
+    {
+        "on": "controller/layout/after",
+        "class": "PHY/Events/Cache",
+        "method": "onLayoutAfter"
+    },
+    {
+        "on": "view/markup/before",
+        "class": "PHY/Events/View",
+        "method": "onMarkupBefore"
+    },
+    {
+        "on": "view/markup/after",
+        "class": "PHY/Events/View",
+        "method": "onMarkupAfter"
+    },
+    {
+        "on": "view/layout/before",
+        "class": "PHY/Events/View",
+        "method": "onMarkupBefore"
+    },
+    {
+        "on": "view/layout/after",
+        "class": "PHY/Events/View",
+        "method": "onLayoutAfter"
+    },
+    {
+        "on": "core/block/menu",
+        "class": "PHY/Events/Block",
+        "method": "onLoadMenu"
+    },
+    {
+        "on": "layout/controller/before",
+        "class": "PHY/Events/Layout",
+        "method": "onControllerBefore"
+    },
+    {
+        "on": "layout/controller/after",
+        "class": "PHY/Events/Layout",
+        "method": "onControllerAfter"
+    }
+]

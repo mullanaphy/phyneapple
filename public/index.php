@@ -24,7 +24,7 @@
          * Make sure we're on PHP5.4+
          */
         if (version_compare(phpversion(), '5.4.0', '<') === true) {
-            echo '<html><head><title>Fiddlesticks...</title></head><body><div><h3>Sorry Mate!</h3><p>PHY 2.0 supports PHP 5.4+.</p></div></body></html>';
+            echo '<html><head><title>Fiddlesticks...</title></head><body><div><h3>Sorry Mate!</h3><p>Phyneapple supports PHP 5.4+.</p></div></body></html>';
             exit;
         }
 
@@ -52,10 +52,18 @@
         $app->setEnvironment($request->getEnvironmental('PHY_ENVIRONMENT', 'development'));
 
         /*
+         * Load any configured events.
+         */
+        $events = $app->get('config/events');
+        if ($events) {
+            $app->loadEvents($events);
+        }
+
+        /*
          * Add in our logged in user.
          */
         $app->setUser(new Model\User($app->get('session/user')
-            ? : []));
+            ? : array()));
 
         /*
          * Now let's render our app.

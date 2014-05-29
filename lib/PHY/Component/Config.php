@@ -17,8 +17,6 @@
 
     namespace PHY\Component;
 
-    use PHY\Variable\Obj;
-
     /**
      * Config namespace
      *
@@ -59,8 +57,7 @@
                 $content = fread($FILE, filesize($file));
                 fclose($FILE);
                 $content = preg_replace('#/\*.+?\*/#is', '', $content);
-                $content = json_decode($content);
-                $this->resources[$namespace][$key] = (new Obj($content))->toArray();
+                $this->resources[$namespace][$key] = json_decode($content, JSON_OBJECT_AS_ARRAY);
             }
             if ($values) {
                 $temp = $this->resources[$namespace][$key];

@@ -24,6 +24,7 @@
     use PHY\Http\Response;
     use PHY\Model\IUser;
     use PHY\View\Layout;
+    use PHY\Event\Dispatcher as EventDispatcher;
 
     /**
      * Core APP class. This holds all global states and pieces everything
@@ -480,6 +481,22 @@
         public function getPublicDirectory()
         {
             return $this->publicDirectory;
+        }
+
+        /**
+         * @param array $events
+         * @return $this
+         */
+        public function loadEvents(array $events = [])
+        {
+            foreach ($events as $event) {
+                Event::on($event['on'], new EventDispatcher($event['class'] . '::' . $event['method'], array_key_exists('parameters', $event)
+                    ? $event['parameters']
+                    : [], array_key_exists('recurring', $event)
+                    ? $event['recurring']
+                    : false));
+            }
+            return $this;
         }
 
     }

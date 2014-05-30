@@ -330,6 +330,7 @@
             $content = call_user_func(function () use ($file) {
                 ob_start();
                 extract($this->variables);
+                /** @noinspection PhpUnusedLocalVariableInspection */
                 $app = $this->getLayout()->getController()->getApp();
                 include $file;
                 $content = ob_get_contents();

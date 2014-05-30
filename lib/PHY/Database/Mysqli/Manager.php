@@ -374,7 +374,7 @@
             $changed = false;
             $database->autocommit(false);
             $source = self::parseSource($model);
-            foreach ($source['schema'] as $alias => $table) {
+            foreach ($source['schema'] as $table) {
                 if (!array_key_exists($table['table'], self::$_tables) || !self::$_tables[$table['table']]) {
                     $databaseName = static::getDatabaseName($database);
                     $check = $database->single("SHOW TABLES WHERE Tables_in_" . $databaseName . " = '" . $table['table'] . "'");
@@ -503,24 +503,6 @@
             return array_key_exists($table, static::$_databases)
                 ? static::$_databases[$table]
                 : '';
-        }
-
-        /**
-         * Get a specific table's data for saving/retrieving in our database.
-         *
-         * @param array $table
-         * @param array $data
-         * @return array
-         */
-        private static function getTableData(array $table, array $data)
-        {
-            $row = [];
-            foreach ($table as $key => $value) {
-                if (array_key_exists($key, $data)) {
-                    $row[$key] = $data[$key];
-                }
-            }
-            return $row;
         }
 
         /**

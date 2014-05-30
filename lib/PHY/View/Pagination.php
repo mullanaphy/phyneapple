@@ -58,6 +58,7 @@
                 $pagination = $tag->ul;
                 $url = $this->getVariable('url', null);
                 switch (gettype($url)) {
+                    /** @noinspection PhpMissingBreakStatementInspection */
                     case 'object':
                         if (get_class($url) === 'Closure') {
                             break;

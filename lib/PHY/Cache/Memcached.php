@@ -55,14 +55,18 @@
         /**
          * Connect to a Memcache server.
          *
-         * @param str $host
+         * @param string|array $host
          * @param int $port
          * @param int $timeout
          */
         public function connect($host, $port = null, $timeout = null)
         {
-            foreach ($host as $h) {
-                parent::connect($h, $port, $timeout);
+            if (is_array($host)) {
+                foreach ($host as $h) {
+                    parent::connect($h, $port, $timeout);
+                }
+            } else {
+                parent::connect($host, $port, $timeout);
             }
         }
 

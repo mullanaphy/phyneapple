@@ -71,7 +71,7 @@
          */
         public function error($message, $status = 500)
         {
-            $response = new Responset;
+            $response = new Response;
             $response->setStatus($status);
             $response->append($message);
             return $response;

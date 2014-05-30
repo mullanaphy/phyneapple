@@ -34,7 +34,7 @@
          *
          * @param mixed $message
          * @param int $status
-         * @return \PHY\Response\Rest
+         * @return \PHY\Http\Response\Rest
          */
         public function success($message, $status = 200);
 
@@ -43,7 +43,7 @@
          *
          * @param mixed $message
          * @param int $status
-         * @return \PHY\Response\Rest
+         * @return \PHY\Http\Response\Rest
          */
         public function error($message, $status = 500);
     }

@@ -18,7 +18,6 @@
     namespace PHY\Http\Response;
 
     use PHY\Http\Response;
-    use XmlResponse;
 
     /**
      * Handles all the response data.
@@ -29,7 +28,7 @@
      * @license http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
      * @author John Mullanaphy <john@jo.mu>
      */
-    class Rest extends Response
+    class Xml extends Response
     {
 
         protected static $_defaultHeaders = [];
@@ -56,7 +55,7 @@
          * Make sure we have application/xml if there's no set Content-Type or a
          * Content-Type of text/xml.
          *
-         * @return XmlResponse
+         * @return $this
          */
         protected function update()
         {
@@ -72,7 +71,7 @@
          * Recursively add new rows to a SimpleXmlElement.
          *
          * @param array $row
-         * @param SimpleXMLElement &$response
+         * @param \SimpleXMLElement &$response
          */
         protected static function array_to_xml($row, &$response)
         {

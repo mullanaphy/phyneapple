@@ -26,7 +26,7 @@
      * @license http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
      * @author John Mullanaphy <john@jo.mu>
      */
-    class Logout extends \PHY\Controller\AController
+    class Logout extends AController
     {
 
         /**

@@ -94,10 +94,9 @@
          * Delete this registry key if it exists.
          *
          * @param string $key
-         * @param bool $graceful
          * @return bool
          */
-        public function delete($key = null, $graceful = false)
+        public function delete($key = null)
         {
             if ($component = $this->parseComponent($key)) {
                 return $component[0]->delete($component[1]);

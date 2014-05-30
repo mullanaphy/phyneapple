@@ -56,7 +56,7 @@
          * Make sure we have application/xml if there's no set Content-Type or a
          * Content-Type of text/xml.
          *
-         * @return XmlResponse
+         * @return Response
          */
         protected function update()
         {

@@ -17,6 +17,7 @@
 
     namespace PHY\View;
 
+    use PHY\Cache\Local as CacheLocal;
     use PHY\Event;
     use PHY\Event\Item as EventItem;
 

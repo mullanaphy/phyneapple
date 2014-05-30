@@ -29,6 +29,7 @@
      * @copyright Copyright (c) 2013 Phyneapple! (http://www.phyneapple.com/)
      * @license http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
      * @author John Mullanaphy <john@jo.mu>
+     * @todo Totally rework this admin panel. A lot of old rubbish is in here.
      */
     class Admin extends AController
     {
@@ -185,7 +186,7 @@
                 if (!$limit) {
                     $limit = 25;
                 }
-                $collection = new \PHY\Model\User\Collection;
+                $collection = $this->getApp()->get('database')->getCollection('User');
                 $collection->setLimit((($page_id * $limit) - $limit), $limit);
                 $collection->setSort('id');
                 $layout->addVariables('content', ['collection' => $collection]);

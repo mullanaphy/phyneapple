@@ -174,7 +174,7 @@
          */
         public function order()
         {
-            return $this->getQuery()->get('oder');
+            return $this->getQuery()->get('order');
         }
 
         /**

@@ -89,16 +89,6 @@
         }
 
         /**
-         * Get our response.
-         *
-         * @return array
-         */
-        public function response()
-        {
-            return $response;
-        }
-
-        /**
          * Run a task.
          *
          * @return array

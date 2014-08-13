@@ -21,7 +21,7 @@
      * @var $this \PHY\View\Block
      * @var $js array
      * @var $css array
-     * @var $xsrf_id string
+     * @var $xsrfId string
      * @var $title string
      * @see \PHY\View\Head
      */
@@ -35,7 +35,7 @@
 <script src="//code.jquery.com/jquery-latest.min.js"></script><script type="text/javascript">!window.jQuery && document.write('<script type="text/javascript" src="<?=$this->url('jquery.min.js', 'js')?>"><\/script>');</script>
 <script type="text/javascript">if(window.location.hash.toString().match('!')){var url=window.location.hash.toString().split('!');window.location=url[1];}</script>
 <link rel="shortcut icon" href="/favicon.ico" />
-<?php if(isset($xsrfId)):?><script type="text/javascript">!function(){window.xsrfId='<?=$xsrf_id?>';}()</script><?php endif?>
+<?php if(isset($xsrfId)):?><script type="text/javascript">!function(){window.xsrfId='<?=$xsrfId?>';}()</script><?php endif?>
 <?php
     if(isset($js)):
         foreach ($js as $file):

@@ -29,6 +29,8 @@
     class Request implements IRequest
     {
 
+        protected $controllerName = '';
+        protected $actionName = '';
         protected $path = '';
         protected $parameters = [];
         protected $method = 'GET';
@@ -39,7 +41,7 @@
         protected $methods = [];
         protected static $_defaultMethods = ['DELETE', 'GET', 'HEADERS', 'PATCH', 'POST', 'PUT'];
         protected $headers = [];
-        protected static $_defaultHeaders = [];
+        protected static $_defaultHeaders = null;
 
         /**
          * {@inheritDoc}
@@ -50,7 +52,7 @@
             $this->parameters = $parameters;
             $this->setEnvironmentals($environmentals);
             $this->environmentals = array_replace([], $environmentals);
-            $this->headers = array_replace(static::$_defaultHeaders, $headers);
+            $this->headers = array_replace(self::getDefaultHeaders(), $headers);
         }
 
         /**
@@ -72,17 +74,33 @@
                     break;
             }
             $path = $_SERVER['REQUEST_URI'];
-            return new static($path, $parameters, array_merge($_ENV, $_SERVER));
+            return new static($path, $parameters, array_merge($_ENV, $_SERVER), self::getDefaultHeaders());
         }
 
         /**
          * {@inheritDoc}
+         */
+        public function has($key)
+        {
+            return array_key_exists($key, $this->parameters);
+        }
+
+        /**
+         * {@=inheritDoc}
          */
         public function get($key, $default = null)
         {
             return array_key_exists($key, $this->parameters)
                 ? $this->parameters[$key]
                 : $default;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public function hasEnvironmental($key)
+        {
+            return array_key_exists($key, $this->headers);
         }
 
         /**
@@ -108,15 +126,62 @@
          */
         public function getDefaultEnvironmentals()
         {
-            return static::$_defaultEnvironmentals;
+            return self::$_defaultEnvironmentals;
         }
 
         /**
          * {@inheritDoc}
          */
-        public function getDefaultHeaders()
+        public function hasHeader($key)
         {
-            return static::$_defaultHeaders;
+            return array_key_exists($key, $this->headers);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public function getHeader($key, $default = null)
+        {
+            return array_key_exists($key, $this->headers)
+                ? $this->headers[$key]
+                : $default;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public function getHeaders()
+        {
+            return $this->headers;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public static function getDefaultHeaders()
+        {
+            if (self::$_defaultHeaders === null) {
+                if (function_exists('apache_request_headers')) {
+                    self::$_defaultHeaders = apache_request_headers();
+                } else {
+                    self::$_defaultHeaders = [];
+                    $http = '#\AHTTP_#';
+                    foreach ($_SERVER as $key => $value) {
+                        if (preg_match($http, $key)) {
+                            $header = preg_replace($http, '', $key);
+                            $matches = explode('_', $header);
+                            if (count($matches) > 0 and strlen($header) > 2) {
+                                foreach ($matches as $k => $v) {
+                                    $matches[$k] = ucfirst(strtolower($v));
+                                }
+                                $header = implode('-', $matches);
+                            }
+                            self::$_defaultHeaders[$header] = $value;
+                        }
+                    }
+                }
+            }
+            return self::$_defaultHeaders;
         }
 
         /**
@@ -124,7 +189,7 @@
          */
         public function getDefaultMethods()
         {
-            return static::$_defaultMethods;
+            return self::$_defaultMethods;
         }
 
         /**
@@ -141,6 +206,38 @@
         public function getMethods()
         {
             return $this->methods;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public function setControllerName($name)
+        {
+            return $this->controllerName = $name;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public function getControllerName()
+        {
+            return $this->controllerName;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public function setActionName($name)
+        {
+            return $this->actionName = $name;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public function getActionName()
+        {
+            return $this->actionName;
         }
 
         /**
@@ -174,7 +271,7 @@
          */
         public function setHeaders(array $headers = [])
         {
-            $this->headers = array_replace($this->getDefaultHeaders(), $headers);
+            $this->headers = array_replace(self::getDefaultHeaders(), $headers);
             return $this;
         }
 
@@ -217,9 +314,13 @@
         /**
          * {@inheritDoc}
          */
-        public function getUrl()
+        public function getUrl($queryString = false)
         {
-            return $this->getEnvironmental('REQUEST_URI', '/');
+            $url = $this->getEnvironmental('REQUEST_URI', '/');
+            if (!$queryString && strpos($url, '?') !== false) {
+                $url = explode('?', $url)[0];
+            }
+            return $url;
         }
 
     }

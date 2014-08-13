@@ -43,28 +43,15 @@
             }
         }
 
+        /**
+         * {@inheritDoc}
+         */
         public function setData($data = [])
         {
+            $this->headers['Content-Type'] = 'application/xml';
             $response = new \SimpleXMLElement('<?xml version="1.0"?><response></response>');
             self::array_to_xml($data, $response);
-            $this->data = $response->asXML();
-            return $this->update();
-        }
-
-        /**
-         * Make sure we have application/xml if there's no set Content-Type or a
-         * Content-Type of text/xml.
-         *
-         * @return $this
-         */
-        protected function update()
-        {
-
-            if (!$this->headers->has('Content-Type') || 'text/xml' === $this->headers->get('Content-Type')) {
-                $this->headers->set('Content-Type', 'application/xml');
-            }
-
-            return $this->setContent($this->data);
+            return $this->setContent($response->asXML());
         }
 
         /**

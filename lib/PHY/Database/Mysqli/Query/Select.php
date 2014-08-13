@@ -62,18 +62,18 @@
         public function field($field, $alias = '')
         {
             $alias = $alias && is_string($alias)
-                ? $this->clean($alias, '`') . '.'
+                ? $this->clean($alias, true) . '.'
                 : '';
             $field = $field === '*'
                 ? '*'
-                : $this->clean($field);
+                : $this->clean($field, true);
             $this->select[] = $alias . $field;
         }
 
         /**
          * {@inheritDoc}
          */
-        public function max($field = '_id', $alias = '')
+        public function max($field = 'id', $alias = '')
         {
             $alias = $alias && is_string($alias)
                 ? $this->clean($alias, '`') . '.'
@@ -87,7 +87,7 @@
         /**
          * {@inheritDoc}
          */
-        public function min($field = '_id', $alias = '')
+        public function min($field = 'id', $alias = '')
         {
             $alias = $alias && is_string($alias)
                 ? $this->clean($alias, '`') . '.'

@@ -39,16 +39,16 @@
         public function structure()
         {
             $controller = $this->getLayout()->getController();
+            $request = $controller->getRequest();
             $links = $this->getVariable('links');
-            $root = $controller->getRequest()->getEnvironmental('REQUEST_URI');
-            $root = explode('/', $root)[0];
             $event = new EventItem('block/core/menu', [
                 'links' => $links
             ]);
             Event::dispatch($event);
             $links = $event->links;
             $this->setTemplate('core/sections/header/menu.phtml')->setVariable('links', $links)
-                ->setVariable('root', $root);
+                ->setVariable('controllerName', $request->getControllerName())
+                ->setVariable('actionName', $request->getActionName());
         }
 
     }

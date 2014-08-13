@@ -34,6 +34,7 @@
 
         protected $order = [];
         protected $current = [
+            'alias' => 'primary',
             'by' => null,
             'direction' => null
         ];
@@ -41,14 +42,19 @@
         /**
          * {@inheritDoc}
          */
-        public function by($by = '_id')
+        public function by($by = 'id', $alias = 'primary')
         {
-            if ($this->current['direction'] !== null) {
-                $this->order[] = ' `' . $this->clean($by) . '` ' . $this->current['direction'] . ' ';
+            if ($this->current['by']) {
+                $this->direction('asc');
+            } else if ($this->current['direction'] !== null) {
+                $this->order[] = ' ' . $this->clean($alias, true) . '.' . $this->clean($by, true) . ' ' . $this->current['direction'] . ' ';
                 $this->current = [
+                    'alias' => $alias,
                     'by' => null,
                     'direction' => null
                 ];
+            } else {
+                $this->current['by'] = $by;
             }
             return $this;
         }
@@ -59,11 +65,14 @@
         public function direction($direction = 'asc')
         {
             if ($this->current['by'] !== null) {
-                $this->order[] = ' `' . $this->clean($this->current['by']) . '` ' . $direction . ' ';
+                $this->order[] = ' ' . $this->clean($this->current['alias'], true) . '.' . $this->clean($this->current['by'], true) . ' ' . $direction . ' ';
                 $this->current = [
+                    'alias' => 'primary',
                     'by' => null,
                     'direction' => null
                 ];
+            } else {
+                $this->current['direction'] = $direction;
             }
             return $this;
         }
@@ -97,8 +106,17 @@
          */
         public function toString()
         {
-            if ($this->order) {
-                return ' ORDER BY (' . join(', ', $this->order) . ') ';
+            if ($this->order || $this->current['by']) {
+                if ($this->current['by']) {
+                    $this->order[] = ' ' . $this->clean($this->current['alias'], true) . '.' . $this->clean($this->current['by'], true) . ' ' . ($this->current['direction']
+                            ? : 'asc') . ' ';
+                    $this->current = [
+                        'alias' => 'primary',
+                        'by' => null,
+                        'direction' => null
+                    ];
+                }
+                return ' ORDER BY ' . join(', ', $this->order) . ' ';
             } else {
                 return ' ';
             }

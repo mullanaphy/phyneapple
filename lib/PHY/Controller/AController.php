@@ -126,11 +126,19 @@
             }
 
             /* If everything is good, let's call the correct route. */
-            $this->$action();
+            $response = $this->$action();
+            if ($response) {
+                $this->setResponse($response);
+            } else {
+                $response = $this->getResponse();
+                $response->addContent($this->getLayout());
+            }
             Event::dispatch(new EventItem('controller/action/after', [
                 'controller' => $this,
-                'action' => $action
+                'action' => $action,
+                'response' => $response,
             ]));
+            return $response;
         }
 
         /**
@@ -250,10 +258,15 @@
             if (!$url) {
                 return '/';
             }
+
             if (is_array($url)) {
                 $parameters = $url;
                 $url = array_shift($parameters);
                 $url .= '?' . http_build_query($parameters, '', '&amp;');
+            }
+
+            if (strpos($url, '://')) {
+                return $url;
             }
 
             if ($location) {
@@ -303,8 +316,6 @@
         public function render()
         {
             $this->parsed = true;
-            $response = $this->getResponse();
-            $response->addContent($this->getLayout());
             return $this->getResponse();
         }
 

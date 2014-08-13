@@ -23,9 +23,13 @@
      * @var $message string
      */
 ?>
-<div class="jumbotron land">
-    <div class="container">
-        <h1><?=isset($title)?$title:'Message'?></h1>
-        <p class="lead"><?=isset($message)?$message:'Like that?'?></p>
-    </div>
+<div class="alert alert-<?php if (isset($type)): ?><?= $this->clean($type) ?><?php else: ?>warning<?php endif ?>">
+    <h4><?=
+            isset($title)
+                ? $this->clean($title)
+                : 'Message' ?></h4>
+    <?=
+        isset($message)
+            ? $this->clean($message)
+            : 'Like that?' ?>
 </div>

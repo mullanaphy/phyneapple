@@ -20,16 +20,19 @@
      *
      * @var $this \PHY\View\Block
      * @var $itemName string
-     * @var $item \PHY\Model\Item
+     * @var $item \PHY\Model\Entity
      */
 ?>
-<h1><?=$itemName?> #<?=$item->id?></h1>
+<h1><?= $itemName ?> #<?= $item->id ?></h1>
 <div class="generic-item">
-    <?php foreach ($item->toArray() as $key => $value):?>
-            <?php if ($key === 'id') continue?>
-            <dl>
-                <dt><label for="generic-item-<?=$this->clean($key)?>"><?=$this->clean(ucfirst($key))?></label></dt>
-                <dd><input id="generic-item-<?=$this->clean($key)?>" name="<?=$this->clean($key)?>" type="text" value="<?=$this->clean($value)?>" /></dd>
-            </dl>
-        <?php endforeach?>
+    <?php foreach ($item->toArray() as $key => $value): ?>
+        <?php if ($key === 'id') {
+            continue;
+        } ?>
+        <dl>
+            <dt><label for="generic-item-<?= $this->clean($key) ?>"><?= $this->clean(ucfirst($key)) ?></label></dt>
+            <dd><input id="generic-item-<?= $this->clean($key) ?>" name="<?= $this->clean($key) ?>" type="text"
+                       value="<?= $this->clean($value) ?>"/></dd>
+        </dl>
+    <?php endforeach ?>
 </div>

@@ -15,41 +15,22 @@
      *
      */
 
-    namespace PHY\Http\Response;
+    namespace PHY\Model\Config;
 
-    use PHY\Http\Response;
+    use PHY\Model\Collection as BaseCollection;
 
     /**
-     * Handles all the response data.
+     * Config collection
      *
-     * @package PHY\Http\Response\Json
+     * @package PHY\Model\Config\Collection
      * @category PHY\Phyneapple
      * @copyright Copyright (c) 2013 Phyneapple! (http://www.phyneapple.com/)
      * @license http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
      * @author John Mullanaphy <john@jo.mu>
      */
-    class Json extends Response
+    class Collection extends BaseCollection
     {
 
-        protected static $_defaultHeaders = [];
-
-        /**
-         * {@inheritDoc}
-         */
-        public function renderContent()
-        {
-            if ($this->hasContent()) {
-                echo json_encode($this->getContent(), JSON_PRETTY_PRINT);
-            }
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        public function setData($data = [])
-        {
-            $this->headers['Content-Type'] = 'application/json';
-            return $this->setContent($data);
-        }
+        protected static $_source = '\PHY\Model\Config';
 
     }

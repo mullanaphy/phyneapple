@@ -47,6 +47,14 @@
         public static function createFromGlobal();
 
         /**
+         * Return whether a REQUEST parameter exists or not.
+         *
+         * @param string $key
+         * @return bool
+         */
+        public function has($key);
+
+        /**
          * Return a value from the REQUEST if it exists.
          *
          * @param string $key
@@ -54,6 +62,14 @@
          * @return mixed|null
          */
         public function get($key, $default = null);
+
+        /**
+         * Return whether an environmental exists or not.
+         *
+         * @param string $key
+         * @return bool
+         */
+        public function hasEnvironmental($key);
 
         /**
          * Return a value from our environmentals if it exists.
@@ -79,11 +95,36 @@
         public function getDefaultEnvironmentals();
 
         /**
-         * Get default headers.
+         * Return whether a header exists or not.
+         *
+         * @param string $key
+         * @return bool
+         */
+        public function hasHeader($key);
+
+        /**
+         * Return a value from our headers if it exists.
+         *
+         * @param string $key
+         * @param mixed $default
+         * @return mixed|null
+         */
+        public function getHeader($key, $default = null);
+
+        /**
+         * Get currently defined headers.
          *
          * @return array
          */
-        public function getDefaultHeaders();
+        public function getHeaders();
+
+        /**
+         * Get default headers.
+         *
+         * @return array
+         * @static
+         */
+        public static function getDefaultHeaders();
 
         /**
          * Get default methods.
@@ -176,4 +217,33 @@
          */
         public function getUrl();
 
+        /**
+         * Set our desired controller's name.
+         *
+         * @param string $name
+         * @return IRequest
+         */
+        public function setControllerName($name);
+
+        /**
+         * Get our desired controller's name.
+         *
+         * @return string
+         */
+        public function getControllerName();
+
+        /**
+         * Set our desired action's name.
+         *
+         * @param string $name
+         * @return IRequest
+         */
+        public function setActionName($name);
+
+        /**
+         * Get our desired action's name.
+         *
+         * @return string
+         */
+        public function getActionName();
     }

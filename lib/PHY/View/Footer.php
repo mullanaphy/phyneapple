@@ -17,9 +17,9 @@
 
     namespace PHY\View;
 
-    use PHY\Cache\Local as CacheLocal;
     use PHY\Event;
     use PHY\Event\Item as EventItem;
+    use PHY\Cache\Local as CacheLocal;
 
     /**
      * Footer block.
@@ -49,7 +49,7 @@
             } catch (\Exception $e) {
                 $cache = new CacheLocal;
             }
-            $theme = $app->getNamespace();
+            $theme = $app->getTheme();
             $key = $theme . '/' . $class . '/block/core/footer';
             if (!($files = $cache->get($key))) {
                 $_files = $this->getVariable('files');
@@ -151,7 +151,7 @@
             }
             $event = new EventItem('block/core/footer', [
                 'files' => $files,
-                'xsrf_id' => false
+                'xsrfId' => false
             ]);
             Event::dispatch($event);
             $files = $event->files;

@@ -74,19 +74,19 @@
         public function renderHeaders()
         {
             if ($this->isRedirect()) {
-                header('Location: '.$this->redirect, $this->redirectStatus);
+                header('Location: ' . $this->redirect, $this->redirectStatus);
             } else {
                 if (array_key_exists($this->statusCode, $this->statusCodes)) {
                     $status = (array_key_exists('SERVER_PROTOCOL', $this->environmentals)
                             ? $this->environmentals['SERVER_PROTOCOL']
-                            : 'HTTP/1.1').' '.$this->statusCode.' '.$this->statusCodes[$this->statusCode];
+                            : 'HTTP/1.1') . ' ' . $this->statusCode . ' ' . $this->statusCodes[$this->statusCode];
                     header($status);
                 } else {
                     http_response_code($this->statusCode);
                 }
                 if ($this->hasHeaders()) {
                     foreach ($this->getHeaders() as $key => $value) {
-                        header($key.': '.$value);
+                        header($key . ': ' . $value);
                     }
                 }
             }
@@ -141,6 +141,16 @@
         public function addContent($content)
         {
             $this->content[] = $content;
+            return $this;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public function setContent(array $content)
+        {
+            $this->content = $content;
+            return $this;
         }
 
         /**
@@ -149,6 +159,7 @@
         public function setStatusCode($code = 200)
         {
             $this->statusCode = $code;
+            return $this;
         }
 
     }

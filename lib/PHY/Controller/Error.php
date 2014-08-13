@@ -52,6 +52,7 @@
          * missing database error, config error, or other.
          *
          * @param string $action
+         * @return null|\PHY\Http\IResponse|\PHY\Http\Response|void
          */
         public function action($action = 'index')
         {

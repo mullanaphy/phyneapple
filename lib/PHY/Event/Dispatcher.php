@@ -67,7 +67,7 @@
         public function setAction($action = null)
         {
             if (!is_callable($action)) {
-                throw new Exception('Dispatcher actions must be a callable, "'.gettype($action).'" was provided.');
+                throw new Exception('Dispatcher actions must be a callable, "' . gettype($action) . '" was provided.');
             }
             $this->setResource('action', $action);
             return $this;

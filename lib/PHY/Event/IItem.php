@@ -17,6 +17,7 @@
 
     namespace PHY\Event;
 
+    use PHY\App;
     use PHY\Event\IDispatcher;
 
     /**
@@ -127,4 +128,19 @@
          * @return int
          */
         public function getChildren();
+
+        /**
+         * Inject our app along with our event.
+         *
+         * @param App $app
+         * @return $this
+         */
+        public function setApp(App $app);
+
+        /**
+         * Get our event's app.
+         *
+         * @return App
+         */
+        public function getApp();
     }

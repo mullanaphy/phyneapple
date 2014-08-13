@@ -102,7 +102,7 @@
                             ? $leftAlias . '.'
                             : '') . $this->clean($key, true) . ' = ' . ($rightAlias
                             ? $rightAlias . '.'
-                            : '') . $this->clean($value);
+                            : '') . $this->clean($value, true);
                 }
                 $on[] = implode(' OR ', $ors);
             }
@@ -172,10 +172,11 @@
                     $this->string = ' FROM ';
                     $tables = $this->table;
                     $primary = array_shift($tables);
+
                     $this->string .= $this->clean($primary['table'], true) . ($this->alias
                             ? ' ' . $this->clean($this->alias, true)
                             : '');
-                    foreach (array_slice($tables, 1) as $alias => $table) {
+                    foreach ($tables as $alias => $table) {
                         $this->string .= ' ' . strtoupper($table['type']) . ' JOIN ' . $this->clean($table['table'], true) . ' ' . $this->clean($alias, true) . ' ON (' . $table['on'] . ') ';
                     }
                     $this->string .= ' ';

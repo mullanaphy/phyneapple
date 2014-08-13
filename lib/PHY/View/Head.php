@@ -46,7 +46,7 @@
             $request = $controller->getRequest();
             $path = $app->getPath();
             $cache = $app->get('cache');
-            $theme = $app->getNamespace();
+            $theme = $app->getTheme();
             $key = $theme . '/' . $class . '/block/core/head';
             if (!($files = $cache->get($key))) {
                 $documentRoot = $request->getEnvironmental('DOCUMENT_ROOT');
@@ -149,12 +149,12 @@
             }
             $event = new EventItem('block/core/head', [
                 'files' => $files,
-                'xsrf_id' => false
+                'xsrfId' => false
             ]);
             Event::dispatch($event);
             $files = $event->files;
             $this->setTemplate('core/sections/head.phtml')->setVariable('css', $files['css'])
-                ->setVariable('js', $files['js'])->setVariable('xsrf_id', $event->xsrf_id);
+                ->setVariable('js', $files['js'])->setVariable('xsrfId', $event->xsrfId);
         }
 
         /**

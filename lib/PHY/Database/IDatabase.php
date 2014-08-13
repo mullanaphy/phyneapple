@@ -41,7 +41,7 @@
          * Prepare a Query statement.
          *
          * @param string $sql
-         * @return STMT
+         * @return \MySQLi_STMT
          */
         public function prepare($sql);
 
@@ -49,7 +49,7 @@
          * Run a basic query.
          *
          * @param string $sql
-         * @return IResult
+         * @return \MySQLi_STMT
          */
         public function query($sql);
 
@@ -57,7 +57,7 @@
          * Run multiple queries.
          *
          * @param string $sql
-         * @return IResult
+         * @return \MySQLi_STMT
          */
         public function multi_query($sql);
 

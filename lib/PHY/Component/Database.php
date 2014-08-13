@@ -62,7 +62,7 @@
                 ]);
                 Event::dispatch($event);
                 if ($event->config && array_key_exists('type', $event->config)) {
-                    $database = '\PHY\Database\\' . $event->config['type'];
+                    $database = '\PHY\Database\\' . ucfirst($event->config['type']);
                     $database = new $database($event->config);
                 }
                 if ($database) {

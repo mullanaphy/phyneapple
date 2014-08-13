@@ -33,6 +33,27 @@
     {
 
         private static $_events = [];
+        private static $_app;
+
+        /**
+         * Set the app for events.
+         *
+         * @param App $app
+         */
+        public static function setApp(App $app)
+        {
+            self::$_app = $app;
+        }
+
+        /**
+         * Grab our assigned app.
+         *
+         * @return App
+         */
+        public static function getApp()
+        {
+            return self::$_app;
+        }
 
         /**
          * Add an event to trigger list.
@@ -136,11 +157,11 @@
                         $event->setChildren(array_key_exists($dispatched, self::$_events)
                             ? count(self::$_events[$dispatched])
                             : 0);
+                        $event->setApp(self::getApp());
                         foreach (self::$_events[$dispatched] as $key => $dispatcher) {
                             /**
                              * @var $dispatcher IDispatcher
                              */
-                            $event->trigger();
                             $dispatcher->dispatch($event);
                             if (!$dispatcher->isRecurring()) {
                                 unset(self::$_events[$dispatched][$key]);

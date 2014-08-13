@@ -24,7 +24,6 @@
     use PHY\Http\Response;
     use PHY\Model\IUser;
     use PHY\View\Layout;
-    use PHY\Event\Dispatcher as EventDispatcher;
 
     /**
      * Core APP class. This holds all global states and pieces everything
@@ -48,6 +47,7 @@
         private $rootDirectory = '';
         private $publicDirectory = '';
         private $user = null;
+        private $theme = '';
 
         /**
          * Return a value from the Registry if it exists.
@@ -94,9 +94,10 @@
          * Delete this registry key if it exists.
          *
          * @param string $key
+         * @param bool $graceful
          * @return bool
          */
-        public function delete($key = null)
+        public function delete($key = null, $graceful = false)
         {
             if ($component = $this->parseComponent($key)) {
                 return $component[0]->delete($component[1]);
@@ -178,10 +179,12 @@
          * Set  our global Debugger.
          *
          * @param IDebugger $debugger
+         * @return $this
          */
         public function setDebugger(IDebugger $debugger)
         {
             $this->debugger = $debugger;
+            return $this;
         }
 
         /**
@@ -201,14 +204,12 @@
          * Change which namespace to use.
          *
          * @param string $namespace
-         * @return string
+         * @return $this
          */
-        public function setNamespace($namespace = null)
+        public function setNamespace($namespace)
         {
-            if ($namespace !== null) {
-                $this->namespace = $namespace;
-            }
-            return $this->namespace;
+            $this->namespace = $namespace;
+            return $this;
         }
 
         /**
@@ -219,6 +220,29 @@
         public function getNamespace()
         {
             return $this->namespace;
+        }
+
+        /**
+         * Change which namespace to use.
+         *
+         * @param string $theme
+         * @return $this
+         */
+        public function setTheme($theme)
+        {
+            $this->theme = $theme;
+            return $this;
+        }
+
+        /**
+         * Get the currently defined theme to use.
+         *
+         * @return string
+         */
+        public function getTheme()
+        {
+            return $this->theme
+                ? : $this->getNamespace();
         }
 
         /**
@@ -262,7 +286,7 @@
             if ($this->hasComponent($component)) {
                 return [$this->getComponent($component), $key];
             } else {
-                $className = '\PHY\Component\\' . $component;
+                $className = '\PHY\Component\\' . ucfirst($component);
                 if (class_exists($className)) {
                     $this->addComponent(new $className);
                     return [$this->getComponent($component), $key];
@@ -366,8 +390,10 @@
                 }
                 $pathParameters = explode('/', strtolower(trim($path, '/')));
                 if (count($pathParameters) >= 2) {
-                    $controllerClass = array_shift($pathParameters);
-                    $method = array_shift($pathParameters);
+                    $controllerName = array_shift($pathParameters);
+                    $controllerClass = ucfirst($controllerName);
+                    $actionName = array_shift($pathParameters);
+                    $method = $actionName;
                     if (count($pathParameters)) {
                         $parameters = [
                             [],
@@ -380,26 +406,34 @@
                                 : $i = 0][] = $key;
                         }
                         if (count($parameters[1]) !== count($parameters[0])) {
-                            $parameters[1][] = null;
+                            $parameters[1][] = $parameters[0][count($parameters[0]) - 1];
+                            $parameters[0][count($parameters[0]) - 1] = '__slug';
                         }
                         $request->addParameters(array_combine($parameters[0], $parameters[1]));
                     }
                 } else {
                     if (count($pathParameters)) {
                         $controllerClass = current($pathParameters);
+                        $controllerName = $controllerClass;
                         if (!$controllerClass) {
-                            $controllerClass = 'index';
+                            $controllerClass = 'Index';
+                            $controllerName = 'index';
                         }
                         $method = 'index';
+                        $actionName = '__index';
                     } else {
-                        $controllerClass = 'index';
+                        $controllerClass = 'Index';
+                        $controllerName = 'index';
                         $method = 'index';
+                        $actionName = '__index';
                     }
                 }
+                $request->setControllerName($controllerName);
+                $request->setActionName($actionName);
 
                 /* @var \PHY\Controller\IController $controller */
-                if (class_exists('\PHY\Controller\\' . $controllerClass)) {
-                    $_ = '\PHY\Controller\\' . $controllerClass;
+                $_ = '\PHY\Controller\\' . ucfirst($controllerClass);
+                if (class_exists($_)) {
                     $controller = new $_($this);
                 } else {
                     throw new HttpException\NotFound('Seems I couldn\'t find your requests controller "' . $controllerClass . '". Blame the programmer, he\she almost definitely did it. Even if you put in the wrong url, just blame them. They\'re used to it!');
@@ -408,7 +442,7 @@
 
                 $layout = new Layout;
                 $layout->setController($controller);
-                $layout->loadBlocks('default', $controllerClass . '/' . $method);
+                $layout->loadBlocks('default', $controllerName . '/' . $method);
                 $controller->setLayout($layout);
 
                 $controller->action($method);
@@ -480,22 +514,6 @@
         public function getPublicDirectory()
         {
             return $this->publicDirectory;
-        }
-
-        /**
-         * @param array $events
-         * @return $this
-         */
-        public function loadEvents(array $events = [])
-        {
-            foreach ($events as $event) {
-                Event::on($event['on'], new EventDispatcher(str_replace('/', '\\', $event['class']) . '::' . $event['method'], array_key_exists('parameters', $event)
-                    ? $event['parameters']
-                    : [], array_key_exists('recurring', $event)
-                    ? $event['recurring']
-                    : false));
-            }
-            return $this;
         }
 
     }

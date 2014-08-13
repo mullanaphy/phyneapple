@@ -32,6 +32,7 @@
     {
 
         protected static $_source = [
+            'cacheable' => true,
             'schema' => [
                 'primary' => [
                     'table' => 'authorize',

@@ -64,19 +64,15 @@
         /**
          * Connect to a Memcache server.
          *
-         * @param string|array $host
+         * @param mixed $host
          * @param int $port
          * @param int $timeout
          * @return $this
          */
         public function connect($host, $port = null, $timeout = null)
         {
-            if (is_array($host)) {
-                foreach ($host as $h) {
-                    parent::connect($h, $port, $timeout);
-                }
-            } else {
-                parent::connect($host, $port, $timeout);
+            foreach ($host as $h) {
+                parent::connect($h, $port, $timeout);
             }
             return $this;
         }
@@ -86,7 +82,6 @@
          */
         public function decrement($node, $decrement = 1)
         {
-            /** @noinspection PhpVoidFunctionResultUsedInspection */
             return parent::decrement($node, $decrement);
         }
 
@@ -95,7 +90,6 @@
          */
         public function delete($node)
         {
-            /** @noinspection PhpVoidFunctionResultUsedInspection */
             return parent::delete($node);
         }
 
@@ -104,7 +98,6 @@
          */
         public function flush()
         {
-            /** @noinspection PhpVoidFunctionResultUsedInspection */
             return parent::flush();
         }
 
@@ -121,7 +114,6 @@
          */
         public function increment($node, $increment = 1)
         {
-            /** @noinspection PhpVoidFunctionResultUsedInspection */
             return parent::increment($node, $increment);
         }
 

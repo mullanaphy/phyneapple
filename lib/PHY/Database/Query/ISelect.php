@@ -54,7 +54,7 @@
          * @param string $alias
          * @return $this
          */
-        public function min($field = '_id', $alias = '');
+        public function min($field = 'id', $alias = '');
 
         /**
          * Field to do a max against.
@@ -63,7 +63,7 @@
          * @param string $alias
          * @return $this
          */
-        public function max($field = '_id', $alias = '');
+        public function max($field = 'id', $alias = '');
 
         /**
          * Set a raw field to add.

@@ -137,8 +137,13 @@
         public function execute()
         {
             if ($this->results === null) {
+                $database = $this->getManager()->getDatabase();
+                if (!trim($this->toString())) {
+                    $this->results = [];
+                    return $this;
+                }
                 if ($this->has('bind')) {
-                    $prepare = $this->getManager()->getDatabase()->prepare($this->toString());
+                    $prepare = $database->prepare($this->toString());
                     $bind = $this->get('bind')->toArray();
                     $bound = [];
                     foreach ($bind as $key => $value) {
@@ -151,7 +156,10 @@
                     call_user_func_array([$prepare, 'bind_param'], $bound);
                     $this->results = $prepare->execute();
                 } else {
-                    $this->results = $this->getManager()->getDatabase()->query($this->toString());
+                    $this->results = $database->query($this->toString());
+                }
+                if ($database->error) {
+                    throw new Exception($database->error);
                 }
                 if (!$this->results) {
                     $this->results = [];
@@ -281,15 +289,48 @@
             /* @var Query\Select $select */
             $select = $this->get('select');
             $source = $model->getSource();
+            $id = $model->getPrimaryKey();
             foreach ($source['schema'] as $alias => $table) {
                 if ($alias === 'primary') {
                     $from->from($table['table'], $alias);
+                    $select->field($id, $alias);
                 } else {
-                    $from->leftJoin($table['table'], $alias, array_key_exists('mapping', $table)
-                        ? $table['mapping']
-                        : null);
+                    $joined = false;
+                    if (array_key_exists('mapping', $table)) {
+                        $from->leftJoin($table['table'], $alias, $table['mapping']);
+                        $joined = true;
+                    } else if (array_key_exists('keys', $table) && array_key_exists('foreign', $table['keys'])) {
+                        foreach ($table['keys']['foreign'] as $key => $meta) {
+                            if (is_array($meta)) {
+                                if ($meta['table'] === 'primary') {
+                                    $from->leftJoin($table['table'], $alias, [
+                                        $meta['key'] => $key
+                                    ]);
+                                    $joined = true;
+                                    break;
+                                }
+                            } else {
+                                if ($meta['table'] === 'primary' && $meta === $id) {
+                                    $from->leftJoin($table['table'], $alias, [
+                                        $id => $key
+                                    ]);
+                                    $joined = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    if (!$joined) {
+                        $from->leftJoin($table['table'], $alias, [
+                            $id => array_key_exists('id', $table)
+                                ? $table['id']
+                                : 'id'
+                        ]);
+                    }
                 }
-                $select->field('*', $alias);
+                foreach ($table['columns'] as $column => $meta) {
+                    $select->field($column, $alias);
+                }
             }
             return $this;
         }
@@ -329,7 +370,7 @@
             $source = $model->getSource();
             $table = $source['schema'][$alias];
             $insert->table($table['table']);
-            $data = $model->toArray();
+            $data = $model->getChanged();
             foreach ($data as $key => $value) {
                 if (array_key_exists($key, $table['columns'])) {
                     $insert->add($key);
@@ -364,7 +405,7 @@
             }
             $where->field($alias === 'primary'
                 ? $model->getPrimaryKey()
-                : 'primary_id', $alias)->is($model->id());
+                : 'primary_id')->is($model->id());
             return $this;
         }
 
@@ -379,13 +420,18 @@
             /* @var Query\Select $select */
             $select = $this->get('select');
             $source = $model->getSource();
+            $id = $model->getPrimaryKey();
             foreach ($source['schema'] as $alias => $table) {
                 if ($alias === 'primary') {
                     $from->from($table['table'], $alias);
                 } else {
                     $from->leftJoin($table['table'], $alias, array_key_exists('mapping', $table)
                         ? $table['mapping']
-                        : null);
+                        : [
+                            $id => array_key_exists('id', $table)
+                                ? $table['id']
+                                : 'id'
+                        ]);
                 }
                 $select->field('*', $alias);
             }

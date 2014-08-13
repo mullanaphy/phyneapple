@@ -12,12 +12,6 @@
         "type": "apc",
         "mode": "opcode"
     },
-    "default": {
-        "type": "memcache",
-        "servers": [
-            ["localhost", "11211"]
-        ]
-    },
     "none": {
     }
 }

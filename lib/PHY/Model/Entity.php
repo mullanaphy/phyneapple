@@ -103,31 +103,48 @@
         public function init(array $data = [])
         {
             $initial = [];
+            $cleaned = [];
             foreach ($this->getSource()['schema'] as $table) {
                 foreach ($table['columns'] as $key => $value) {
                     switch ($value) {
                         case 'boolean':
+                            if (isset($data[$key])) {
+                                $cleaned[$key] = (bool)$data[$key];
+                            }
                             $initial[$key] = false;
                             break;
                         case 'id':
                         case 'int':
                         case 'tinyint':
+                            if (isset($data[$key])) {
+                                $cleaned[$key] = (int)$data[$key];
+                            }
                             $initial[$key] = 0;
                             break;
                         case 'decimal':
                         case 'float':
+                            if (isset($data[$key])) {
+                                $cleaned[$key] = (double)$data[$key];
+                            }
                             $initial[$key] = 0.0;
                             break;
                         case 'variable':
                         default:
+                            if (isset($data[$key])) {
+                                $cleaned[$key] = $data[$key];
+                            }
                             $initial[$key] = '';
                             break;
                     }
                 }
             }
+            $primaryKey = $this->getPrimaryKey();
+            if (isset($data[$primaryKey])) {
+                $initial[$primaryKey] = (int)$data[$primaryKey];
+            }
             $this->initial = $initial;
             $this->data = $initial;
-            $this->setInitialData($data);
+            $this->setInitialData($cleaned);
             return $this;
         }
 
@@ -284,6 +301,9 @@
          */
         public function getChanged()
         {
+            if (!$this->exists()) {
+                return $this->data;
+            }
             if (!$this->isDifferent()) {
                 return [];
             }

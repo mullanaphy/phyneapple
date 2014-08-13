@@ -33,16 +33,16 @@
          * Generate the block depending on these variables:
          *     'limit' => number of items to show
          *     'total' => total number of items
-         *     'page_id' => current page id
+         *     'pageId' => current page id
          *     'attributes' => attributes to add to the url links
          *     'url' => {
          *         if 'Function' => 'Function'($i) { } will be called for each $i
          *             return a string/array
-         *         if 'Array' => 'Array'['page_id'] = $i will be called for each $i
+         *         if 'Array' => 'Array'['pageId'] = $i will be called for each $i
          *         if 'String' => {
-         *             if 'QueryString' => appends a page_id=$i to QueryString
+         *             if 'QueryString' => appends a pageId=$i to QueryString
          *             if '[%i]' => replaces [%i] with $i
-         *             else => appends ?page_id=$i
+         *             else => appends ?pageId=$i
          */
         public function structure()
         {
@@ -50,15 +50,15 @@
             $total = (int)$this->getVariable('total', 0);
             $pages = ceil($total / $limit);
             if ($pages > 1) {
-                $id = (int)$this->getVariable('page_id', 1);
+                $id = (int)$this->getVariable('pageId', 1);
                 if ($id < 1 || $id > $pages) {
                     $id = 1;
                 }
                 $tag = $this->tag();
                 $pagination = $tag->ul;
+                $pagination->class('pagination');
                 $url = $this->getVariable('url', null);
                 switch (gettype($url)) {
-                    /** @noinspection PhpMissingBreakStatementInspection */
                     case 'object':
                         if (get_class($url) === 'Closure') {
                             break;
@@ -68,7 +68,7 @@
                     case 'array':
                         $_url = $url;
                         $url = function ($i) use ($_url) {
-                            $_url['page_id'] = $i;
+                            $_url['pageId'] = $i;
                             return $_url;
                         };
                         break;
@@ -77,10 +77,10 @@
                             $_url = explode('?', $url);
                             parse_str($_url[1], $parameters);
                             $url = function ($i) use ($_url, $parameters) {
-                                $parameters['page_id'] = $i;
+                                $parameters['pageId'] = $i;
                                 return $_url . '?' . http_build_query($parameters);
                             };
-                        } elseif (strpos('[%i]', $url) !== false) {
+                        } elseif (strpos($url, '[%i]') !== false) {
                             $_url = $url;
                             $url = function ($i) use ($_url) {
                                 return str_replace('[%i]', $i, $_url);
@@ -88,7 +88,7 @@
                         } else {
                             $_url = $url;
                             $url = function ($i) use ($_url) {
-                                return $_url . '?page_id=' . $i;
+                                return $_url . '?pageId=' . $i;
                             };
                         }
                         break;
@@ -100,13 +100,28 @@
                 $attributes = $this->getVariable('attributes', []);
                 $start = 1;
                 $end = $pages;
+                if ($start > 1) {
+                    $pagination->append($tag->li($tag->helper()->url('&laquo;', $url($start - 1), $attributes)));
+                } else {
+                    $pagination->append($tag->li($tag->span('&laquo;'), [
+                        'class' => 'disabled'
+                    ]));
+                }
                 for ($i = $start; $i <= $end; ++$i) {
+                    $page = $tag->helper()->url($i, $url($i), $attributes);
+                    $li = $tag->li($page);
                     if ($i === $id) {
-                        $page = $tag->strong($i);
-                    } else {
-                        $page = $tag->helper()->url($i, $url($i), $attributes);
+                        $li->class('active');
+                        $page->append($tag->span(' (current)', ['class' => 'sr-only']));
                     }
-                    $pagination->append($tag->li($page));
+                    $pagination->append($li);
+                }
+                if ($end < $pages) {
+                    $pagination->append($tag->li($tag->helper()->url('&raquo;', $url($end + 1), $attributes)));
+                } else {
+                    $pagination->append($tag->li($tag->span('&raquo;'), [
+                        'class' => 'disabled'
+                    ]));
                 }
                 $this->setTemplate('pagination.phtml')->setVariable('pagination', $pagination);
             }

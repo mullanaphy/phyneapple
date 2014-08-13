@@ -1,5 +1,4 @@
 /vendor/
-/var/log/error.log
-/var/log/access.log
+/var/
 /config/phyneapple/
 /design/phyneapple/

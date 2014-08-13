@@ -61,8 +61,8 @@
         public function success($message, $status = 200)
         {
             $response = new Response;
-            $response->setStatus($status);
-            $response->append($message);
+            $response->setStatusCode($status);
+            $response->setData($message);
             return $response;
         }
 
@@ -72,8 +72,8 @@
         public function error($message, $status = 500)
         {
             $response = new Response;
-            $response->setStatus($status);
-            $response->append($message);
+            $response->setStatusCode($status);
+            $response->setData($message);
             return $response;
         }
 

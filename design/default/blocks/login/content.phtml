@@ -21,23 +21,30 @@
      * @var $this \PHY\View\Block
      */
 ?>
-<div class="login">
+<div class="page-header">
     <h1>Please Login</h1>
-    <form action="<?= $this->url('login') ?>" method="post">
-        <?= $this->child('error') ?>
-        <fieldset type="text">
-            <label for="login-username" class="block">Email</label>
-            <input id="login-username" class="inp-text large" name="username" type="text" value="<?=
-                isset($username)
-                    ? $this->clean($username)
-                    : null ?>"/>
-        </fieldset>
-        <fieldset type="text">
-            <label for="login-password" class="block">Password</label>
-            <input id="login-password" class="inp-text large" name="password" type="password"/>
-        </fieldset>
-        <fieldset type="submit">
-            <input type="submit" value="Login"/>
-        </fieldset>
-    </form>
 </div>
+<form action="<?= $this->url('login') ?>" class="form" method="post">
+    <?= $this->child('error') ?>
+    <div class="row">
+        <div class="col-sm-6 col-lg-6">
+            <div class="form-group">
+                <label for="login-username" class="control-label">Email</label>
+                <input id="login-username" class="form-control" name="username" type="text" value="<?=
+                    isset($username)
+                        ? $this->clean($username)
+                        : null ?>"/>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-6">
+            <div class="form-group">
+                <label for="login-password" class="control-label">Password</label>
+                <input id="login-password" class="form-control" name="password" type="password"/>
+            </div>
+        </div>
+    </div>
+    <hr/>
+    <div class="form-group">
+        <button class="btn btn-danger">Login</button>
+    </div>
+</form>

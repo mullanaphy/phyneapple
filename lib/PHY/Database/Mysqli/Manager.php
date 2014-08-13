@@ -112,7 +112,7 @@
          */
         public function getModel($model)
         {
-            $model = '\PHY\Model\\' . str_replace('/', '\\', $model);
+            $model = '\PHY\Model\\' . implode('/', array_map('ucfirst', explode('\\', $model)));
             $model = new $model;
             return $model;
         }
@@ -124,7 +124,7 @@
         {
             $modelEntity = '\PHY\Model\\' . $model;
             self::createTable(new $modelEntity, $this->getDatabase(), $this->getCache());
-            $collection = '\PHY\Model\\' . str_replace('/', '\\', $model) . '\Collection';
+            $collection = '\PHY\Model\\' . implode('/', array_map('ucfirst', explode('\\', $model))) . '\Collection';
             $collection = new $collection;
             $collection->setManager($this);
             return $collection;
@@ -152,7 +152,7 @@
             if (!$data) {
                 $query = $this->createQuery()->selectFromModel($model);
                 if (!is_array($loadBy)) {
-                    $loadBy = [$loadBy[$source['id']] => $loadBy];
+                    $loadBy = [$source['id'] => (int)$loadBy];
                 }
                 $where = $query->get('where');
                 $columns = [];
@@ -161,6 +161,7 @@
                         $columns[$key] = $alias;
                     }
                 }
+                $columns[$source['id']] = 'primary';
                 foreach ($loadBy as $key => $value) {
                     if (is_array($value)) {
                         if (isset($columns[$key])) {
@@ -191,6 +192,38 @@
                 }
                 $query->execute();
                 $data = $query->getIterator()->fetch_assoc();
+                if ($data) {
+                    foreach ($data as $key => $value) {
+                        if ($key === $source['id']) {
+                            $column = 'id';
+                        } else {
+                            $column = isset($columns[$key], $source[$columns[$key]][$key])
+                                ? $source[$columns[$key]][$key]
+                                : 'variable';
+                            if (is_array($column)) {
+                                $column = $column['type'];
+                            }
+                        }
+                        switch ($column) {
+                            case 'boolean':
+                                $data[$key] = (bool)$data[$key];
+                                break;
+                            case 'id':
+                            case 'int':
+                            case 'tinyint':
+                                $data[$key] = (int)$data[$key];
+                                break;
+                            case 'decimal':
+                            case 'float':
+                                $data[$key] = (double)$data[$key];
+                                break;
+                            case 'variable':
+                            default:
+                                $data[$key] = (string)$data[$key];
+                                break;
+                        }
+                    }
+                }
             }
             if ($data) {
                 $success = true;
@@ -281,7 +314,7 @@
                 foreach ($source['schema'] as $alias => $table) {
                     $query = $this->createQuery()->insertFromModel($model, $alias);
                     if ($query) {
-                        if (!$query->getIterator()) {
+                        if (!$query->execute()) {
                             throw new \Exception('Abra Cadabra.');
                         }
                     }
@@ -289,6 +322,7 @@
                 $db->commit();
                 $db->autocommit(true);
             } catch (\Exception $exception) {
+                var_dump($alias, $exception);
                 $db->rollback();
                 $db->autocommit(true);
                 $success = false;
@@ -374,7 +408,7 @@
             $changed = false;
             $database->autocommit(false);
             $source = self::parseSource($model);
-            foreach ($source['schema'] as $table) {
+            foreach ($source['schema'] as $alias => $table) {
                 if (!array_key_exists($table['table'], self::$_tables) || !self::$_tables[$table['table']]) {
                     $databaseName = static::getDatabaseName($database);
                     $check = $database->single("SHOW TABLES WHERE Tables_in_" . $databaseName . " = '" . $table['table'] . "'");
@@ -389,7 +423,11 @@
                             $engine = array_key_exists('engine', $table)
                                 ? $table['engine']
                                 : 'InnoDatabase';
-                            $fields = [$id => '`' . $id . '` int(16) unsigned NOT NULL AUTO_INCREMENT'];
+                            if ($id) {
+                                $fields = [$id => '`' . $id . '` int(16) unsigned NOT NULL AUTO_INCREMENT'];
+                            } else {
+                                $fields = [];
+                            }
                             $keys = array_key_exists('keys', $table)
                                 ? $table['keys']
                                 : ['local' => [], 'foreign' => []];
@@ -399,7 +437,7 @@
                             if (!array_key_exists('foreign', $keys)) {
                                 $keys['foreign'] = [];
                             }
-                            if (!array_key_exists($id, $keys['local'])) {
+                            if ($id && !array_key_exists($id, $keys['local'])) {
                                 $keys['local'][$id] = 'PRIMARY KEY (`' . $id . '`)';
                             }
                             foreach ($keys['local'] as $key => $index) {
@@ -418,11 +456,40 @@
                                         break;
                                 }
                             }
+                            foreach ($keys['foreign'] as $key => $index) {
+                                if (is_array($index)) {
+                                    $keys['local'][$key] = "UNIQUE INDEX (`" . $key . "`)";
+                                    $keys['foreign'][$key] = "CONSTRAINT `" . $table['table'] . "_" . $index['key'] . "_" . $key . "` FOREIGN KEY (`" . $key . "`) ";
+                                    $keys['foreign'][$key] .= "REFERENCES `" . $databaseName . "`.`" . $source['schema'][$index['table']]['table'] . "` (`" . $index['key'] . "`) ";
+                                    if (array_key_exists('cascade', $index)) {
+                                        if (is_array($index['cascade'])) {
+                                            if (array_key_exists('update', $index['cascade']) && $index['cascade']['update']) {
+                                                $keys['foreign'][$key] .= " ON UPDATE CASCADE ";
+                                            }
+                                            if (array_key_exists('delete', $index['cascade']) && $index['cascade']['delete']) {
+                                                $keys['foreign'][$key] .= " ON DELETE CASCADE ";
+                                            }
+                                        } else if ($index['cascade']) {
+                                            $keys['foreign'][$key] .= " ON UPDATE CASCADE ON DELETE CASCADE";
+                                        }
+                                    }
+                                }
+                            }
                             foreach ($table['columns'] as $key => $type) {
-                                $fields[$key] = '`' . $key . '` ' . self::getFieldType($type);
+                                if (is_array($type) && array_key_exists('type', $type)) {
+                                    $fields[$key] = '`' . $key . '` ' . self::getFieldType($type['type']);
+                                    if (array_key_exists('comment', $type)) {
+                                        $fields[$key] .= ' COMMENT \'' . $type['comment'] . ' \'';
+                                    }
+                                } else {
+                                    $fields[$key] = '`' . $key . '` ' . self::getFieldType($type);
+                                }
                             }
                             $database->query("CREATE TABLE IF NOT EXISTS `" . $databaseName . "`.`" . $table['table'] . "` (" . implode(",", $fields) . "," . implode(",", $keys['local']) . "
-                                ) ENGINE=" . $engine . " DEFAULT CHARSET=" . $charset . ";" . implode(";", $keys['foreign']));
+                                " . ($keys['foreign']
+                                ? "," . implode(",", $keys['foreign'])
+                                : "") . "
+                                ) ENGINE=" . $engine . " DEFAULT CHARSET=" . $charset . ";");
                             self::$_tables[$table['table']] = !$database->error;
                             if (self::$_tables[$table['table']] && array_key_exists('filler', $table) && $table['filler']) {
                                 $item = new static();
@@ -469,7 +536,7 @@
                 if (array_key_exists('id', $source['schema']['primary'])) {
                     $source['id'] = $source['schema']['primary']['id'];
                 } else {
-                    $source['id'] = '_id';
+                    $source['id'] = 'id';
                 }
             }
             $source['name'] = get_class($model);
@@ -503,6 +570,24 @@
             return array_key_exists($table, static::$_databases)
                 ? static::$_databases[$table]
                 : '';
+        }
+
+        /**
+         * Get a specific table's data for saving/retrieving in our database.
+         *
+         * @param array $table
+         * @param array $data
+         * @return array
+         */
+        private static function getTableData(array $table, array $data)
+        {
+            $row = [];
+            foreach ($table as $key => $value) {
+                if (array_key_exists($key, $data)) {
+                    $row[$key] = $data[$key];
+                }
+            }
+            return $row;
         }
 
         /**

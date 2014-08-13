@@ -58,7 +58,7 @@
             foreach ($configs as $key) {
                 $file = false;
                 foreach ($app->getPath()
-                             ->getPaths('design' . DIRECTORY_SEPARATOR . $app->getNamespace() . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . $key . '.json', 'design' . DIRECTORY_SEPARATOR . 'default' . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . $key . '.json') as $check) {
+                             ->getPaths('design' . DIRECTORY_SEPARATOR . $app->getTheme() . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . $key . '.json', 'design' . DIRECTORY_SEPARATOR . $app->getNamespace() . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . $key . '.json', 'design' . DIRECTORY_SEPARATOR . 'default' . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . $key . '.json') as $check) {
                     if (is_file($check)) {
                         $file = $check;
                         break;

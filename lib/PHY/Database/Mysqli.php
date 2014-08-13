@@ -69,7 +69,7 @@
             $this->multi = false;
             $SQL = parent::prepare($sql);
             if ($this->error) {
-                throw new Exception($this->error, $sql);
+                throw new Exception($this->error, $this->errno, $sql);
             } else {
                 return $SQL;
             }
@@ -272,7 +272,7 @@
                 $this->setManager(new Manager);
             }
             if ($entity) {
-                $model = '\PHY\Model\\' . $entity;
+                $model = '\PHY\Model\\' . ucfirst($entity);
                 $this->manager->load(new $model);
             }
             return $this->manager;

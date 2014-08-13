@@ -36,7 +36,6 @@
          */
         public function __construct(App $app = null)
         {
-            /** @noinspection PhpVoidFunctionResultUsedInspection */
             switch (session_status()) {
                 case PHP_SESSION_DISABLED:
                     throw new Exception('Sessions are disabled so use component cookie/ instead');

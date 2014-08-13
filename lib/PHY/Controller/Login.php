@@ -37,7 +37,9 @@
         public function index_get()
         {
             if ($this->getApp()->getUser()->exists()) {
-                $this->redirect('/');
+                $this->redirect('/admin');
+            } else {
+                $this->getLayout()->block('layout')->setTemplate('core/layout-1col.phtml');
             }
         }
 

@@ -23,15 +23,21 @@
 ?>
 <!DOCTYPE html>
 <html>
-    <head><?=$this->child('head');?></head>
+    <head><?= $this->child('head'); ?></head>
     <body class="two-column">
-        <?=$this->child('header')?>
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-9"><?=$this->child('content')?></div>
-                <div class="col-lg-3"><?=$this->child('sidebar')?></div>
+        <?= $this->child('header') ?>
+        <?= $this->child('alert') ?>
+        <?= $this->child('jumbotron') ?>
+        <div class="land">
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-9"><?= $this->child('content') ?></div>
+                    <div class="col-lg-3">
+                        <div class="well"><?= $this->child('sidebar') ?></div>
+                    </div>
+                </div>
             </div>
         </div>
-        <?=$this->child('footer')?>
+        <?= $this->child('footer') ?>
     </body>
 </html>

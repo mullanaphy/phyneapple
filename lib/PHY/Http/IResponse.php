@@ -96,13 +96,23 @@
          * Add content to our response body.
          *
          * @param mixed $content
+         * @return $this
          */
         public function addContent($content);
+
+        /**
+         * Set our response's content.
+         *
+         * @param array $content
+         * @return $this
+         */
+        public function setContent(array $content);
 
         /**
          * Set a status code.
          *
          * @param int $code
+         * @return $this
          */
         public function setStatusCode($code = 200);
     }

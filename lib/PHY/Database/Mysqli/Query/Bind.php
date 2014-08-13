@@ -79,7 +79,6 @@
                         case 'float':
                             $this->computed[0] .= 'd';
                             break;
-                        /** @noinspection PhpMissingBreakStatementInspection */
                         case 'array':
                             $value = implode(',', $value);
                         default:

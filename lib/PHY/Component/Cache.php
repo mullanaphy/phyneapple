@@ -44,22 +44,16 @@
             if ($values) {
                 $value = array_shift($values);
             } else {
-                $value = $this
-                    ->getApp()
-                    ->get('core/component/cache');
+                $value = $this->getApp()->get('core/component/cache');
             }
             if (!array_key_exists($namespace, $this->resources)) {
                 $this->resources[$namespace] = [];
             }
             if (!array_key_exists($value, $this->resources[$namespace])) {
                 $cache = false;
-                if ($this
-                    ->getApp()
-                    ->get('config/cache')
+                if ($this->getApp()->get('config/cache')
                 ) {
-                    $config = $this
-                        ->getApp()
-                        ->get('config/cache/'.$value);
+                    $config = $this->getApp()->get('config/cache/' . $value);
                     $event = new EventItem('component/cache/load/before', [
                         'config' => $config,
                         'type' => $value
@@ -68,7 +62,7 @@
                     $config = $event->config;
                     if ($config) {
                         try {
-                            $cache = '\PHY\Cache\\'.$event->config['type'];
+                            $cache = '\PHY\Cache\\' . ucfirst($event->config['type']);
                             $cache = new $cache($config);
                             foreach ($config['servers'] as $host) {
                                 if (strpos($host, ':') !== false) {
@@ -103,7 +97,7 @@
                         'type' => $value
                     ]));
                 } else {
-                    throw new Exception('Component "cache/'.$value.'" is undefined.');
+                    throw new Exception('Component "cache/' . $value . '" is undefined.');
                 }
             }
             return $this->resources[$namespace][$value];

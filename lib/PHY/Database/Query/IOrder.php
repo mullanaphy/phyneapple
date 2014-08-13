@@ -35,7 +35,7 @@
          * @param string $by
          * @return $this
          */
-        public function by($by = '_id');
+        public function by($by = 'id');
 
         /**
          * Which direction we should be sorting by.

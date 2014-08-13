@@ -17,6 +17,8 @@
 
     namespace PHY\Event;
 
+    use PHY\App;
+
     /**
      * Our actual event item that gets pushed along.
      *
@@ -29,6 +31,7 @@
     class Item implements IItem
     {
 
+        protected $app;
         protected $name = 'event';
         protected $values = [];
         protected $dispatcher;
@@ -162,4 +165,20 @@
             return $this->children;
         }
 
+        /**
+         * {@inheritDoc}
+         */
+        public function setApp(App $app)
+        {
+            $this->app = $app;
+            return $this;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public function getApp()
+        {
+            return $this->app;
+        }
     }

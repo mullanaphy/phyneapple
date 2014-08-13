@@ -41,6 +41,7 @@
 
         protected $name = '';
         protected $theme = 'default';
+        protected $namespace = 'default';
         protected $variables = [];
 
         /**
@@ -161,7 +162,8 @@
                 'layout' => $layout
             ]);
             Event::dispatch($event);
-            $this->setTheme($event->layout->getController()->getApp()->getNamespace());
+            $this->setTheme($event->layout->getController()->getApp()->getTheme());
+            $this->setNamespace($event->layout->getController()->getApp()->getNamespace());
             return $this;
         }
 
@@ -225,6 +227,28 @@
         public function getTheme()
         {
             return $this->theme;
+        }
+
+        /**
+         * Set a namespace to use for our view.
+         *
+         * @param string $theme
+         * @return $this
+         */
+        public function setNamespace($theme = '')
+        {
+            $this->theme = $theme;
+            return $this;
+        }
+
+        /**
+         * Get our defined theme.
+         *
+         * @return string
+         */
+        public function getNamespace()
+        {
+            return $this->namespace;
         }
 
         /**
@@ -316,7 +340,7 @@
             }
             $file = false;
             $paths = $this->getPath()
-                ->getPaths('design' . DIRECTORY_SEPARATOR . $this->theme . DIRECTORY_SEPARATOR . 'blocks' . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $source), 'design' . DIRECTORY_SEPARATOR . 'default' . DIRECTORY_SEPARATOR . 'blocks' . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $source));
+                ->getPaths('design' . DIRECTORY_SEPARATOR . $this->getTheme() . DIRECTORY_SEPARATOR . 'blocks' . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $source), 'design' . DIRECTORY_SEPARATOR . $this->getNamespace() . DIRECTORY_SEPARATOR . 'blocks' . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $source), 'design' . DIRECTORY_SEPARATOR . 'default' . DIRECTORY_SEPARATOR . 'blocks' . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $source));
             foreach ($paths as $check) {
                 if (is_file($check) && is_readable($check)) {
                     $file = $check;
@@ -330,7 +354,6 @@
             $content = call_user_func(function () use ($file) {
                 ob_start();
                 extract($this->variables);
-                /** @noinspection PhpUnusedLocalVariableInspection */
                 $app = $this->getLayout()->getController()->getApp();
                 include $file;
                 $content = ob_get_contents();

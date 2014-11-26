@@ -1,0 +1,11 @@
+{
+    "default": {
+        "type": "mailgun",
+        "domain": "somehash.mailgun.org",
+        "key": "yourkey",
+        "public": "yourpublickey"
+    },
+    "sendmail": {
+        "type": "sendmail"
+    }
+}
